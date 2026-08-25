@@ -19,8 +19,11 @@
     "worker:startup": "wrangler check startup"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "agents": "^0.21.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.53.1",

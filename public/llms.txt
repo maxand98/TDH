@@ -1,0 +1,31 @@
+# myTDH
+
+myTDH is a public, price-independent holding-duration signal for digital artists.
+
+## Human interface
+
+- Home: https://mytdh.xyz/
+- Raster profile calculator: https://mytdh.xyz/calculate
+- Human-readable methodology: https://mytdh.xyz/methodology
+
+## Machine interfaces
+
+- OpenAPI 3.1: https://mytdh.xyz/openapi.json
+- MCP Streamable HTTP: https://mytdh.xyz/mcp
+- MCP manifest: https://mytdh.xyz/.well-known/mcp.json
+- Methodology: https://mytdh.xyz/api/methodology
+- Health: https://mytdh.xyz/api/health
+
+## Primary lookup
+
+GET https://mytdh.xyz/api/raster-tdh?profile={URL_ENCODED_RASTER_ARTIST_PROFILE}
+
+Example profile: https://www.raster.art/artist/casey-reas
+
+The result always names its declared corpus. A 404 with covered=false means the Raster artist is valid but is not represented in the current AB[500] corpus. Never infer a zero score from an uncovered profile.
+
+## Interpretation
+
+- TDH measures current uninterrupted holding duration and independent collector breadth.
+- It does not use price, sales volume, floor price, reputation, or artistic quality.
+- A result is meaningful only with its methodology, snapshot date, and corpus.

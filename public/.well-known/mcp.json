@@ -1,0 +1,17 @@
+{
+  "name": "myTDH",
+  "description": "Look up transparent artist Total Days Held results and inspect the public methodology.",
+  "endpoint": "https://mytdh.xyz/mcp",
+  "transport": "streamable-http",
+  "authentication": "none",
+  "tools": [
+    {
+      "name": "get_artist_tdh",
+      "description": "Look up artist TDH from a public Raster artist profile URL."
+    },
+    {
+      "name": "get_methodology",
+      "description": "Return the methodology, coverage rule, corpus, and excluded inputs."
+    }
+  ]
+}

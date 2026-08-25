@@ -28,24 +28,26 @@ Wallet connection is not required for an exploratory calculation. A signed claim
 
 ## Repository status
 
-Phase 0/1 foundation implemented:
+Current foundation implemented:
 
 - deterministic `artist-tdh/1` calculator;
 - ERC-721 current-ownership reconstruction;
 - reacquisition resets and declared-identity internal transfer preservation;
 - artist, treasury, burn, and custody-address exclusions;
 - Cloudflare Worker health, methodology, and calculation endpoints;
-- responsive editorial methodology lab;
+- Raster-profile calculator at `/calculate` backed by the declared AB[500] corpus;
+- public CORS-enabled JSON API, OpenAPI document, `llms.txt`, and stateless MCP server;
 - Cloudflare deployment on the `mytdh.xyz` custom domain;
 - hand-worked fixtures and failure-state tests.
 
-Chain discovery and production backfill are not yet connected. The deployed foundation currently calculates from a declared current-holdings JSON dataset.
+Complete cross-chain Raster holding history is not yet available through a public Raster data endpoint. Raster profiles outside the current AB[500] corpus return an explicit uncovered result rather than a fabricated score.
 
 - [Product specification](docs/product-spec.md)
 - [Methodology](docs/methodology.md)
 - [Architecture and delivery plan](docs/architecture.md)
 - [Domain research](docs/domain-research.md)
 - [Visual system and guardrails](docs/design-system.md)
+- [Agent, API, and MCP access](docs/agent-api.md)
 
 ## Proposed stack
 
@@ -75,7 +77,9 @@ Local API routes:
 
 - `GET /api/health`
 - `GET /api/methodology`
+- `GET /api/raster-tdh?profile={raster_artist_profile_url}`
 - `POST /api/calculate`
+- `POST /mcp` (Streamable HTTP)
 
 ## Principles
 

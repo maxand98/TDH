@@ -1,5 +1,6 @@
 import { ARTIST_TDH_METHODOLOGY, calculateArtistTdh } from "../src/domain/artist-tdh";
-import { findRasterArtistTdh, rasterArtistSlug, type RasterArtistTdh } from "../src/domain/raster-profile";
+import { mcpHandler } from "./mcp";
+import { lookupRasterTdh } from "./tdh-data";
 
 const MAX_BODY_BYTES = 128 * 1024;
 
@@ -7,7 +8,9 @@ function json(data: unknown, init?: ResponseInit): Response {
   return Response.json(data, {
     ...init,
     headers: {
+      "access-control-allow-origin": "*",
       "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
       ...init?.headers,
     },
   });
@@ -49,8 +52,22 @@ async function boundedJson(request: Request): Promise<unknown> {
 }
 
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/mcp") return mcpHandler(request, env, ctx);
+
+    if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "access-control-allow-headers": "content-type",
+          "access-control-allow-methods": "GET, POST, OPTIONS",
+          "access-control-allow-origin": "*",
+          "access-control-max-age": "86400",
+        },
+      });
+    }
 
     if (request.method === "GET" && url.pathname === "/api/health") {
       return json({ ok: true, service: "mytdh", methodology: ARTIST_TDH_METHODOLOGY });
@@ -67,39 +84,8 @@ export default {
     if (request.method === "GET" && url.pathname === "/api/raster-tdh") {
       try {
         const profile = url.searchParams.get("profile") ?? "";
-        const slug = rasterArtistSlug(profile);
-        const snapshotResponse = await fetch("https://ab5d.xyz/api/otdh", {
-          headers: { accept: "application/json" },
-          cf: { cacheEverything: true, cacheTtl: 3600 },
-        });
-        if (!snapshotResponse.ok) throw new Error("The TDH corpus is temporarily unavailable");
-        const snapshot: {
-          artists?: RasterArtistTdh[];
-          generated_at?: string;
-          method?: string;
-          schema?: string;
-          snapshot_at?: string;
-          universe?: unknown;
-        } = await snapshotResponse.json();
-        const artist = findRasterArtistTdh(snapshot.artists ?? [], slug);
-        if (!artist) {
-          return json({
-            covered: false,
-            slug,
-            profile: `https://www.raster.art/artist/${slug}`,
-            corpus: "AB[500] / 500 Art Blocks projects",
-            message: "This artist is not yet covered by the declared AB[500] corpus.",
-          }, { status: 404 });
-        }
-        return json({
-          covered: true,
-          profile: `https://www.raster.art/artist/${slug}`,
-          corpus: "AB[500] / 500 Art Blocks projects",
-          methodology: snapshot.method,
-          schema: snapshot.schema,
-          snapshotAt: snapshot.snapshot_at,
-          artist,
-        });
+        const result = await lookupRasterTdh(profile);
+        return json(result, { status: result.covered ? 200 : 404 });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to read Raster profile";
         return json({ error: message }, { status: 400 });

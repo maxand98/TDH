@@ -209,7 +209,6 @@ function CalculatePage() {
       <span>RASTER PROFILE CALCULATOR</span>
     </header>
     <section className="calculate-stage">
-      <p className="calculate-kicker">ARTIST TDH / PUBLIC INSTRUMENT</p>
       <h1>PASTE YOUR<br />RASTER PROFILE.</h1>
       <form onSubmit={(event) => { void calculate(event); }}>
         <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
@@ -239,8 +238,59 @@ function CalculatePage() {
   </main>;
 }
 
+function SiteFooter() {
+  return <footer>
+    <div className="footer-license">
+      <span>myTDH · MMXXVI</span>
+      <Maxand98Wordmark />
+      <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 · NO RIGHTS RESERVED</a>
+    </div>
+  </footer>;
+}
+
+function MethodologyPage() {
+  return <main className="methodology-page">
+    <header className="calculate-header">
+      <a href="/">myTDH</a>
+      <a href="/calculate">Calculate yours</a>
+    </header>
+    <article className="methodology-copy">
+      <h1>HOW TDH<br />IS CALCULATED.</h1>
+      <p className="methodology-lede">TDH measures the duration and breadth of current independent collecting across an artist’s declared body of work. It is a holding-behaviour signal, not a judgment of artistic or financial value.</p>
+
+      <section>
+        <h2>THE PROJECT SCORE</h2>
+        <p>For each project, the current uninterrupted holding time of every eligible work is measured in complete days. If one collector identity holds several works from that project, those holding times are averaged so that the identity contributes one observation.</p>
+        <p className="methodology-formula">project TDH = median identity hold days × log₂(1 + collector identities)</p>
+        <p>The median resists a few exceptionally old holdings. The logarithm rewards genuine collector breadth while reducing the effect of very large editions.</p>
+      </section>
+
+      <section>
+        <h2>THE ARTIST SCORE</h2>
+        <p>All eligible project scores are added, then divided by the square root of the number of projects. This allows a sustained body of work to contribute without making prolific release schedules dominate the result.</p>
+        <p className="methodology-formula">artist TDH = sum of project TDH ÷ √ eligible projects</p>
+      </section>
+
+      <section>
+        <h2>WHAT COUNTS</h2>
+        <p>Only works still held at the declared snapshot count. A disposal ends the holding period; reacquisition begins a new one. Transfers between wallets belonging to one consolidated identity preserve the original acquisition date.</p>
+        <p>Artist-controlled wallets, treasuries, burn addresses and unresolved custody are excluded or explicitly flagged. Price, sales volume, floor price, reputation and social attention have no weight.</p>
+      </section>
+
+      <section>
+        <h2>COVERAGE</h2>
+        <p>The public Raster-profile calculator currently resolves artists represented in the declared AB[500] corpus. An artist outside that corpus is reported as uncovered, never as a zero score.</p>
+        <p>Every result identifies the formula as <code>artist-tdh/1</code>, names its corpus and gives its snapshot date, collector count, project count, work count and raw collector-days.</p>
+      </section>
+    </article>
+    <SiteFooter />
+  </main>;
+}
+
 export default function App() {
-  if (window.location.pathname.replace(/\/$/, "") === "/calculate") return <CalculatePage />;
+  const path = window.location.pathname.replace(/\/$/, "");
+  if (path === "/calculate") return <CalculatePage />;
+  if (path === "/methodology") return <MethodologyPage />;
   const moveHeroLetter = (event: React.PointerEvent<HTMLSpanElement>) => {
     const letter = event.currentTarget;
     const bounds = letter.getBoundingClientRect();
@@ -248,15 +298,11 @@ export default function App() {
     const y = (event.clientY - bounds.top) / bounds.height - .5;
     letter.style.setProperty("--letter-x", `${x * 12}px`);
     letter.style.setProperty("--letter-y", `${y * 8}px`);
-    letter.style.setProperty("--letter-rx", `${y * -7}deg`);
-    letter.style.setProperty("--letter-ry", `${x * 10}deg`);
   };
 
   const restHeroLetter = (event: React.PointerEvent<HTMLSpanElement>) => {
     event.currentTarget.style.removeProperty("--letter-x");
     event.currentTarget.style.removeProperty("--letter-y");
-    event.currentTarget.style.removeProperty("--letter-rx");
-    event.currentTarget.style.removeProperty("--letter-ry");
   };
 
   return (
@@ -296,19 +342,12 @@ export default function App() {
           >H</span>
         </h1>
         <div className="hero-foot">
-          <p>A transparent holding-duration signal for any digital artist.</p>
+          <p><a href="/methodology">A transparent holding-duration signal for any digital artist.</a></p>
           <a className="primary-link" href="/calculate">Calculate yours</a>
-          <p className="hero-index">ARTIST / OEUVRE / COLLECTOR / TIME</p>
         </div>
       </section>
 
-      <footer>
-        <Maxand98Wordmark />
-        <div className="footer-license">
-          <span>A MAXAND98 PUBLIC INSTRUMENT</span>
-          <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 · NO RIGHTS RESERVED</a>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

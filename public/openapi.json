@@ -1,0 +1,62 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "myTDH API",
+    "version": "1.0.0",
+    "description": "Public, price-independent artist holding-duration calculations. Every result declares its corpus and snapshot."
+  },
+  "servers": [{ "url": "https://mytdh.xyz" }],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Check service health",
+        "responses": { "200": { "description": "Service is available", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } } }
+      }
+    },
+    "/api/methodology": {
+      "get": {
+        "operationId": "getMethodology",
+        "summary": "Read the current TDH methodology",
+        "responses": { "200": { "description": "Methodology declaration", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Methodology" } } } } }
+      }
+    },
+    "/api/raster-tdh": {
+      "get": {
+        "operationId": "getArtistTdhByRasterProfile",
+        "summary": "Look up artist TDH from a Raster profile",
+        "description": "Returns a corpus-qualified TDH result. A 404 with covered=false means the artist is outside the current declared corpus, not that their TDH is zero.",
+        "parameters": [{ "name": "profile", "in": "query", "required": true, "schema": { "type": "string", "format": "uri" }, "example": "https://www.raster.art/artist/casey-reas" }],
+        "responses": {
+          "200": { "description": "Covered artist result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RasterTdhResult" } } } },
+          "400": { "description": "Invalid profile or upstream failure", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Valid Raster profile outside the current corpus", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UncoveredArtist" } } } }
+        }
+      }
+    },
+    "/api/calculate": {
+      "post": {
+        "operationId": "calculateArtistTdh",
+        "summary": "Calculate TDH from a declared current-holdings dataset",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CalculationInput" } } } },
+        "responses": {
+          "200": { "description": "Calculated artist TDH", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+          "400": { "description": "Invalid calculation input", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Health": { "type": "object", "required": ["ok", "service", "methodology"], "properties": { "ok": { "type": "boolean" }, "service": { "type": "string" }, "methodology": { "type": "string" } } },
+      "Methodology": { "type": "object", "required": ["methodology", "definition", "priceInputs"], "properties": { "methodology": { "type": "string" }, "definition": { "type": "string" }, "priceInputs": { "type": "boolean", "const": false } } },
+      "RasterArtist": { "type": "object", "required": ["artist", "slug", "otdh", "collector_identities", "projects", "current_works", "raw_collector_days", "rank"], "properties": { "artist": { "type": "string" }, "slug": { "type": "string" }, "otdh": { "type": "number" }, "collector_identities": { "type": "integer" }, "projects": { "type": "integer" }, "current_works": { "type": "integer" }, "raw_collector_days": { "type": "number" }, "rank": { "type": "integer" } } },
+      "RasterTdhResult": { "type": "object", "required": ["covered", "slug", "profile", "corpus", "artist"], "properties": { "covered": { "type": "boolean", "const": true }, "slug": { "type": "string" }, "profile": { "type": "string", "format": "uri" }, "corpus": { "type": "string" }, "methodology": { "type": "string" }, "schema": { "type": "string" }, "snapshotAt": { "type": "string", "format": "date-time" }, "artist": { "$ref": "#/components/schemas/RasterArtist" } } },
+      "UncoveredArtist": { "type": "object", "required": ["covered", "slug", "profile", "corpus", "message"], "properties": { "covered": { "type": "boolean", "const": false }, "slug": { "type": "string" }, "profile": { "type": "string", "format": "uri" }, "corpus": { "type": "string" }, "message": { "type": "string" } } },
+      "Holding": { "type": "object", "required": ["tokenId", "identityId", "acquiredAt"], "properties": { "tokenId": { "type": "string" }, "identityId": { "type": "string" }, "acquiredAt": { "type": "string", "format": "date-time" } } },
+      "Project": { "type": "object", "required": ["id", "label", "holdings"], "properties": { "id": { "type": "string" }, "label": { "type": "string" }, "holdings": { "type": "array", "items": { "$ref": "#/components/schemas/Holding" } } } },
+      "CalculationInput": { "type": "object", "required": ["artistId", "snapshotAt", "projects"], "properties": { "artistId": { "type": "string" }, "snapshotAt": { "type": "string", "format": "date-time" }, "projects": { "type": "array", "items": { "$ref": "#/components/schemas/Project" } } } },
+      "Error": { "type": "object", "required": ["error"], "properties": { "error": { "type": "string" } } }
+    }
+  }
+}
