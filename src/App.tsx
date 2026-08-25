@@ -136,12 +136,23 @@ function IdleScreensaver() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let timer = 0;
+    let activityVersion = 0;
     const arm = () => {
+      const version = ++activityVersion;
       window.clearTimeout(timer);
       setActiveImage(null);
       timer = window.setTimeout(() => {
         const next = images[Math.floor(Math.random() * images.length)];
-        if (next) setActiveImage(next);
+        if (!next) return;
+        const preloader = new Image();
+        preloader.onload = () => {
+          if (version === activityVersion) setActiveImage(next);
+        };
+        preloader.onerror = () => {
+          const fallback = FALLBACK_SCREENSAVER_IMAGES[Math.floor(Math.random() * FALLBACK_SCREENSAVER_IMAGES.length)];
+          if (version === activityVersion && fallback) setActiveImage(fallback);
+        };
+        preloader.src = next;
       }, IDLE_DELAY_MS);
     };
     const events: Array<keyof WindowEventMap> = ["pointermove", "pointerdown", "keydown", "scroll", "touchstart"];
