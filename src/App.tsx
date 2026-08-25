@@ -507,7 +507,7 @@ function CalculatePage() {
     </header>
     <section className="calculate-intro">
       <div className="calculate-stage">
-        <h1>ENTER YOUR<br />RASTER URL</h1>
+        <h1>ENTER YOUR RASTER URL</h1>
         <form onSubmit={(event) => { void calculate(event); }}>
           <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
           <div className="profile-entry">

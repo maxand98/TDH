@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="cosmos" cx="28%" cy="24%" r="88%">
+      <stop offset="0" stop-color="#405cff"/>
+      <stop offset="0.42" stop-color="#151d58"/>
+      <stop offset="1" stop-color="#020206"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="url(#cosmos)"/>
+  <circle cx="49" cy="14" r="2" fill="#fff"/>
+  <path d="M49 8v12M43 14h12" stroke="#fff" stroke-width="1" opacity=".72"/>
+  <text x="32" y="42" fill="#fff" font-family="Arial Narrow,Arial,sans-serif" font-size="24" font-weight="700" text-anchor="middle">TDH</text>
+</svg>

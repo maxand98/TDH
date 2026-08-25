@@ -12,7 +12,7 @@ function utcDate() {
 }
 
 function jobId(slug: string) {
-  return `${slug}-${utcDate().replaceAll("-", "")}-v2`;
+  return `${slug}-${utcDate().replaceAll("-", "")}-v3`;
 }
 
 function jobUrl(id: string) {
