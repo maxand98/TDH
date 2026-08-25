@@ -14,8 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b --pretty false",
-    "types:worker": "wrangler types worker-configuration.d.ts",
-    "types:check": "wrangler types worker-configuration.d.ts --check",
+    "types:worker": "wrangler types worker-configuration.d.ts --include-runtime false",
+    "types:check": "wrangler types worker-configuration.d.ts --include-runtime false --check",
     "worker:startup": "wrangler check startup"
   },
   "dependencies": {
