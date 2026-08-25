@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lookupRasterCollectorTdh, type AssetFetcher } from "../src/domain/raster-collector-register";
+import { lookupRasterCollectorTdh, snapshotCacheState, type AssetFetcher, type CollectorSnapshot } from "../src/domain/raster-collector-register";
 
 const registry = {
   snapshot_at: "2026-08-25T00:00:00Z",
@@ -31,11 +31,32 @@ describe("Raster collector registers", () => {
     expect(result.metric?.label).toBe("crTDH");
     expect(result.collectors).toHaveLength(2);
     expect(result.pagination?.total).toBe(2);
+    expect(result.cache?.source).toBe("bundled");
   });
 
   it("supports agent pagination and filtering", async () => {
     const result = await lookupRasterCollectorTdh("raster.art/artist/casey-reas", assets, "https://mytdh.xyz", { limit: 1, query: "beta" });
     expect(result.collectors?.[0]?.name).toBe("Beta");
     expect(result.pagination).toMatchObject({ offset: 0, returned: 1, total: 1, nextOffset: null });
+  });
+
+  it("marks snapshots stale after 24 hours", () => {
+    expect(snapshotCacheState("2026-08-25T00:00:00Z", Date.parse("2026-08-25T23:59:59Z")).stale).toBe(false);
+    expect(snapshotCacheState("2026-08-25T00:00:00Z", Date.parse("2026-08-26T00:00:00Z")).stale).toBe(true);
+  });
+
+  it("prefers a newer generated snapshot over the bundled register", async () => {
+    const generated: CollectorSnapshot = {
+      ...snapshot,
+      snapshot_at: "2026-08-26T00:00:00Z",
+      metric: { id: "crtdh", label: "freshTDH" },
+    };
+    const store = {
+      get<T>() { return Promise.resolve(generated as T); },
+    };
+    const result = await lookupRasterCollectorTdh("https://www.raster.art/artist/casey-reas", assets, "https://mytdh.xyz", {}, store);
+    expect(result.metric?.label).toBe("freshTDH");
+    expect(result.snapshotAt).toBe("2026-08-26T00:00:00Z");
+    expect(result.cache?.source).toBe("generated");
   });
 });

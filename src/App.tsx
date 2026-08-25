@@ -307,6 +307,13 @@ type RasterTdhResponse = {
   method?: { definition: string; edition_weight_formula: string; exclusions: string };
   collectors?: RasterCollector[];
   pagination?: { total: number };
+  cache?: {
+    source: "bundled" | "generated";
+    age_seconds: number;
+    max_age_seconds: number;
+    stale: boolean;
+    revalidating?: boolean;
+  };
 };
 
 type RasterRegisterJob = {
@@ -321,6 +328,10 @@ type RasterRegisterJob = {
   jobUrl?: string;
   resultUrl?: string;
   cached?: boolean;
+  stale?: boolean;
+  snapshotAt?: string;
+  refreshing?: boolean;
+  refreshJobUrl?: string;
   error?: string;
 };
 
@@ -415,12 +426,34 @@ function CalculatePage() {
   const [job, setJob] = useState<RasterRegisterJob | null>(null);
   const calculationRun = useRef(0);
 
-  const loadRegister = async (resultUrl: string, run: number) => {
+  const loadRegister = async (resultUrl: string, run: number, celebrate = true) => {
     const response = await fetch(resultUrl);
     const data = await response.json() as RasterTdhResponse;
     if (run !== calculationRun.current) return;
     setResult(data);
-    if (data.artist && data.collectors) setCelebrationRun((value) => value + 1);
+    if (celebrate && data.artist && data.collectors) setCelebrationRun((value) => value + 1);
+  };
+
+  const refreshCachedRegister = async (statusUrl: string, resultUrl: string, run: number) => {
+    try {
+      let current: RasterRegisterJob = { state: "queued", jobUrl: statusUrl };
+      while (run === calculationRun.current && current.state !== "complete" && current.state !== "errored") {
+        await new Promise((resolve) => window.setTimeout(resolve, current.state === "queued" ? 1_500 : 2_500));
+        const response = await fetch(statusUrl);
+        current = await response.json() as RasterRegisterJob;
+      }
+      if (run !== calculationRun.current) return;
+      if (current.state === "complete") {
+        await new Promise((resolve) => window.setTimeout(resolve, 1_500));
+        await loadRegister(resultUrl, run, false);
+      } else {
+        setResult((value) => value?.cache ? { ...value, cache: { ...value.cache, revalidating: false } } : value);
+      }
+    } catch {
+      if (run === calculationRun.current) {
+        setResult((value) => value?.cache ? { ...value, cache: { ...value.cache, revalidating: false } } : value);
+      }
+    }
   };
 
   const pollJob = async (initial: RasterRegisterJob, run: number) => {
@@ -463,6 +496,9 @@ function CalculatePage() {
       if (data.state === "complete") {
         if (!data.resultUrl) throw new Error("The cached register did not provide a result URL");
         await loadRegister(data.resultUrl, run);
+        if (data.refreshing && data.refreshJobUrl) {
+          void refreshCachedRegister(data.refreshJobUrl, data.resultUrl, run);
+        }
       } else {
         await pollJob(data, run);
       }
@@ -536,6 +572,7 @@ function CalculatePage() {
           <span>ELIGIBLE COLLECTOR ADDRESSES</span>
         </div>
         <div className="register-explainer">Every current collector is shown. Each score adds uninterrupted days held across the artist’s Raster-indexed oeuvre, with smaller editions receiving proportionally more weight. This is an artist-specific equivalent of abTDH, not oTDH.</div>
+        {result.cache?.revalidating ? <p className="register-cache-state" role="status">Cached snapshot shown immediately. Updating it in the background.</p> : null}
         <dl>
           <div><dt>INDEXED ARTWORKS</dt><dd>{number.format(result.corpus.artworks)}</dd></div>
           <div><dt>INDEXED TOKENS</dt><dd>{number.format(result.corpus.tokens)}</dd></div>

@@ -12,7 +12,7 @@ function utcDate() {
 }
 
 function jobId(slug: string) {
-  return `${slug}-${utcDate().replaceAll("-", "")}-v3`;
+  return `${slug}-${utcDate().replaceAll("-", "")}-v4`;
 }
 
 function jobUrl(id: string) {
@@ -21,6 +21,46 @@ function jobUrl(id: string) {
 
 async function readJobProgress(env: Env, id: string): Promise<RasterRegisterProgress | null> {
   return env.REGISTERS.get<RasterRegisterProgress>(`jobs/${id}/progress.json`, "json");
+}
+
+async function ensureRegisterJob(env: Env, slug: string): Promise<RasterRegisterProgress & { jobUrl: string }> {
+  const id = jobId(slug);
+  const existing = await readJobProgress(env, id);
+  if (existing) {
+    if (existing.state !== "complete") {
+      const instance = await env.RASTER_REGISTER.get(id);
+      const status = await instance.status();
+      if (existing.state === "errored" || status.status === "errored" || status.status === "terminated") {
+        await instance.restart();
+        const restarted = { ...existing, state: "queued" as const, stage: "queued" as const, message: "Retrying the Raster collector map", error: undefined, updatedAt: new Date().toISOString() };
+        await env.REGISTERS.put(`jobs/${id}/progress.json`, JSON.stringify(restarted));
+        return { ...restarted, jobUrl: jobUrl(id) };
+      }
+    }
+    return { ...existing, jobUrl: jobUrl(id) };
+  }
+
+  const progress: RasterRegisterProgress = {
+    id,
+    slug,
+    state: "queued",
+    stage: "queued",
+    message: "Waiting to begin the Raster collector map",
+    completed: 0,
+    total: null,
+    updatedAt: new Date().toISOString(),
+  };
+  await env.REGISTERS.put(`jobs/${id}/progress.json`, JSON.stringify(progress));
+  const params: RasterRegisterJobParams = { slug, snapshotAt: new Date().toISOString() };
+  try {
+    await env.RASTER_REGISTER.create({ id, params, retention: { successRetention: "30 days", errorRetention: "30 days" }, locationHint: "oc" });
+  } catch (error) {
+    const instance = await env.RASTER_REGISTER.get(id);
+    const status = await instance.status();
+    if (status.status === "errored" || status.status === "terminated") await instance.restart();
+    else if (status.status === "unknown") throw error;
+  }
+  return { ...progress, jobUrl: jobUrl(id) };
 }
 
 function json(data: unknown, init?: ResponseInit): Response {
@@ -108,6 +148,12 @@ export default {
           limit: Number(url.searchParams.get("limit") ?? 100),
           query: url.searchParams.get("query") ?? undefined,
         }, env.REGISTERS);
+        if (result.covered && result.cache?.stale) {
+          result.cache.revalidating = true;
+          ctx.waitUntil(ensureRegisterJob(env, result.slug).catch((error: unknown) => {
+            console.error(JSON.stringify({ event: "register_revalidation_failed", slug: result.slug, message: error instanceof Error ? error.message : "Unknown error" }));
+          }));
+        }
         return json(result, { status: result.covered ? 200 : 404 });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to read Raster profile";
@@ -123,46 +169,30 @@ export default {
         const published = await lookupRasterCollectorTdh(profile, env.ASSETS, url.origin, { limit: 1 }, env.REGISTERS);
         if (published.covered) {
           const resultUrl = `/api/raster-collector-tdh?profile=${encodeURIComponent(published.profile)}&limit=5000`;
-          return json({ state: "complete", slug, profile: published.profile, resultUrl, cached: true });
-        }
-
-        const id = jobId(slug);
-        const existing = await readJobProgress(env, id);
-        if (existing) {
-          if (existing.state !== "complete") {
-            const instance = await env.RASTER_REGISTER.get(id);
-            const status = await instance.status();
-            if (existing.state === "errored" || status.status === "errored" || status.status === "terminated") {
-              await instance.restart();
-              const restarted = { ...existing, state: "queued" as const, stage: "queued" as const, message: "Retrying the Raster collector map", error: undefined, updatedAt: new Date().toISOString() };
-              await env.REGISTERS.put(`jobs/${id}/progress.json`, JSON.stringify(restarted));
-              return json({ ...restarted, jobUrl: jobUrl(id) }, { status: 202 });
-            }
+          if (!published.cache?.stale) {
+            return json({ state: "complete", slug, profile: published.profile, resultUrl, cached: true, stale: false, snapshotAt: published.snapshotAt });
           }
-          return json({ ...existing, jobUrl: jobUrl(id) }, { status: existing.state === "complete" ? 200 : 202 });
+          try {
+            const refresh = await ensureRegisterJob(env, slug);
+            return json({
+              state: "complete",
+              slug,
+              profile: published.profile,
+              resultUrl,
+              cached: true,
+              stale: true,
+              snapshotAt: published.snapshotAt,
+              refreshing: refresh.state !== "complete",
+              refreshJobUrl: refresh.jobUrl,
+            });
+          } catch (error) {
+            console.error(JSON.stringify({ event: "register_revalidation_failed", slug, message: error instanceof Error ? error.message : "Unknown error" }));
+            return json({ state: "complete", slug, profile: published.profile, resultUrl, cached: true, stale: true, snapshotAt: published.snapshotAt, refreshing: false });
+          }
         }
 
-        const progress: RasterRegisterProgress = {
-          id,
-          slug,
-          state: "queued",
-          stage: "queued",
-          message: "Waiting to begin the Raster collector map",
-          completed: 0,
-          total: null,
-          updatedAt: new Date().toISOString(),
-        };
-        await env.REGISTERS.put(`jobs/${id}/progress.json`, JSON.stringify(progress));
-        const params: RasterRegisterJobParams = { slug, snapshotAt: new Date().toISOString() };
-        try {
-          await env.RASTER_REGISTER.create({ id, params, retention: { successRetention: "30 days", errorRetention: "30 days" }, locationHint: "oc" });
-        } catch (error) {
-          const instance = await env.RASTER_REGISTER.get(id);
-          const status = await instance.status();
-          if (status.status === "errored" || status.status === "terminated") await instance.restart();
-          else if (status.status === "unknown") throw error;
-        }
-        return json({ ...progress, jobUrl: jobUrl(id) }, { status: 202 });
+        const queued = await ensureRegisterJob(env, slug);
+        return json(queued, { status: queued.state === "complete" ? 200 : 202 });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to create the Raster register job";
         console.error(JSON.stringify({ event: "register_job_rejected", message }));

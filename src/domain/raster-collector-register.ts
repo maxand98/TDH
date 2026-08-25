@@ -4,6 +4,7 @@ export type AssetFetcher = { fetch(request: Request): Promise<Response> };
 export type RegisterStore = { get<T>(key: string, type: "json"): Promise<T | null> };
 
 export const RASTER_COLLECTOR_TDH_METHODOLOGY = "raster-artist-abtdh/1";
+export const REGISTER_MAX_AGE_SECONDS = 24 * 60 * 60;
 
 export type RasterCollector = {
   name: string;
@@ -69,6 +70,13 @@ export type RasterCollectorTdhResult = {
   method?: CollectorSnapshot["method"];
   collectors?: RasterCollector[];
   pagination?: { offset: number; limit: number; returned: number; total: number; nextOffset: number | null };
+  cache?: {
+    source: "bundled" | "generated";
+    age_seconds: number;
+    max_age_seconds: number;
+    stale: boolean;
+    revalidating?: boolean;
+  };
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -85,6 +93,21 @@ function parseSnapshot(value: unknown): CollectorSnapshot {
     throw new Error("The collector register is not published");
   }
   return value as CollectorSnapshot;
+}
+
+function snapshotTime(snapshot: CollectorSnapshot): number {
+  const value = Date.parse(snapshot.snapshot_at);
+  return Number.isFinite(value) ? value : 0;
+}
+
+export function snapshotCacheState(snapshotAt: string, now = Date.now()) {
+  const timestamp = Date.parse(snapshotAt);
+  const ageSeconds = Number.isFinite(timestamp) ? Math.max(0, Math.floor((now - timestamp) / 1_000)) : Number.MAX_SAFE_INTEGER;
+  return {
+    age_seconds: ageSeconds,
+    max_age_seconds: REGISTER_MAX_AGE_SECONDS,
+    stale: ageSeconds >= REGISTER_MAX_AGE_SECONDS,
+  };
 }
 
 async function assetJson(assets: AssetFetcher, origin: string, pathname: string): Promise<unknown> {
@@ -109,19 +132,20 @@ export async function lookupRasterCollectorTdh(
     slug: rasterSlug,
     profile: `https://www.raster.art/artist/${rasterSlug}`,
   };
-  let snapshot: CollectorSnapshot;
+  let bundled: CollectorSnapshot | null = null;
   if (entry) {
-    snapshot = parseSnapshot(await assetJson(assets, origin, `/data/raster-collector-tdh/${entry.slug}.json`));
-  } else {
-    const stored = store ? await store.get<CollectorSnapshot>(`registers/${rasterSlug}/latest.json`, "json") : null;
-    if (!stored) {
-      return {
-        ...base,
-        message: "This Raster profile does not yet have a generated collector holding-time register.",
-      };
-    }
-    snapshot = parseSnapshot(stored);
+    bundled = parseSnapshot(await assetJson(assets, origin, `/data/raster-collector-tdh/${entry.slug}.json`));
   }
+  const storedValue = store ? await store.get<CollectorSnapshot>(`registers/${rasterSlug}/latest.json`, "json") : null;
+  const stored = storedValue ? parseSnapshot(storedValue) : null;
+  if (!bundled && !stored) {
+    return {
+      ...base,
+      message: "This Raster profile does not yet have a generated collector holding-time register.",
+    };
+  }
+  const useGenerated = Boolean(stored && (!bundled || snapshotTime(stored) > snapshotTime(bundled)));
+  const snapshot = useGenerated ? stored! : bundled!;
   const query = options.query?.trim().toLowerCase() ?? "";
   const matching = query
     ? snapshot.collectors.filter((collector) => collector.name.toLowerCase().includes(query) || collector.address.toLowerCase().includes(query))
@@ -142,5 +166,9 @@ export async function lookupRasterCollectorTdh(
     method: snapshot.method,
     collectors,
     pagination: { offset, limit, returned: collectors.length, total: matching.length, nextOffset },
+    cache: {
+      source: useGenerated ? "generated" : "bundled",
+      ...snapshotCacheState(snapshot.snapshot_at),
+    },
   };
 }
