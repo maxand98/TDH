@@ -21,7 +21,7 @@ export default function App() {
         <a className="wordmark" href="#top" aria-label="myTDH home">myTDH<span>®</span></a>
         <nav aria-label="Primary navigation">
           <a href="#method">( Method )</a><a href="#lab">( Calculate )</a>
-          <a href="https://github.com/maxand98/TDH">( Source ↗ )</a>
+          <a href="https://github.com/maxand98/TDH">( Source )</a>
         </nav>
         <p className="edition">PUBLIC LAB / 001</p>
       </header>
@@ -29,14 +29,12 @@ export default function App() {
       <section className="hero" id="top">
         <div className="hero-meta hero-meta-left"><span>Measure</span><strong>Total Days Held</strong></div>
         <div className="hero-meta hero-meta-right"><span>Signal</span><strong>Time × Breadth</strong></div>
-        <div className="hero-title" aria-label="my Total Days Held"><span>MY</span><h1>TDH</h1></div>
+        <h1 className="hero-title" aria-label="my Total Days Held">myTDH</h1>
         <div className="hero-foot">
           <p>A transparent holding-duration signal for any digital artist.</p>
-          <a className="primary-link" href="#lab">Calculate yours <span>↓</span></a>
+          <a className="primary-link" href="#lab">Calculate yours</a>
           <p className="hero-index">ARTIST / OEUVRE / COLLECTOR / TIME</p>
         </div>
-        <div className="side-stamp side-stamp-left">NO PRICE</div>
-        <div className="side-stamp side-stamp-right">OPEN METHOD</div>
       </section>
 
       <div className="ticker" aria-hidden="true">
@@ -103,7 +101,7 @@ export default function App() {
       <footer>
         <a className="footer-mark" href="#top">myTDH</a>
         <div><span>Public foundation / 2026</span><span>Methodology is evidence, not judgment.</span></div>
-        <a href="https://github.com/maxand98/TDH">VIEW SOURCE ↗</a>
+        <a href="https://github.com/maxand98/TDH">VIEW SOURCE</a>
       </footer>
     </main>
   );

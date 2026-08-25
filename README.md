@@ -45,6 +45,7 @@ Chain discovery and production backfill are not yet connected. The deployed foun
 - [Methodology](docs/methodology.md)
 - [Architecture and delivery plan](docs/architecture.md)
 - [Domain research](docs/domain-research.md)
+- [Visual system and guardrails](docs/design-system.md)
 
 ## Proposed stack
 
