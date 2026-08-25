@@ -133,6 +133,7 @@ textarea:focus { outline:2px solid var(--acid); outline-offset:2px; }
 .register-title { align-items:end; display:grid; gap:1rem 2rem; grid-template-columns:1fr auto; }
 .register-title h2 { font-size:clamp(4rem,9vw,9rem); margin:0 0 1.5rem; }
 .register-title a { font-family:"IBM Plex Mono",monospace; font-size:1.125rem; font-weight:500; text-transform:uppercase; }
+.metric-label b { font-family:"IBM Plex Mono",monospace; font-size:1.125rem; text-transform:uppercase; }
 .register-title strong { font-size:clamp(5rem,12vw,12rem); letter-spacing:-.08em; line-height:.86; }
 .register-title>span { font-family:"IBM Plex Mono",monospace; font-size:var(--text-ui); grid-column:2; padding-top:.75rem; text-align:right; }
 .register-explainer { display:block; font-size:clamp(1.5rem,2.6vw,2.6rem); inline-size:100%; line-height:1.1; margin:clamp(4rem,7vw,7rem) 0; max-inline-size:none!important; width:calc(100vw - clamp(2rem,14vw,14rem)); }

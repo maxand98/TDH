@@ -528,7 +528,7 @@ function CalculatePage() {
         <div className="register-title">
           <div>
             <h2>{result.artist.name}</h2>
-            <a href="/methodology">{result.metric.label} / ARTIST-SPECIFIC abTDH</a>
+            <span className="metric-label"><a href="/methodology">{result.metric.label} / ARTIST-SPECIFIC&nbsp;</a><b>TDH</b></span>
           </div>
           <strong>{number.format(result.corpus.eligible_collector_addresses)}</strong>
           <span>ELIGIBLE COLLECTOR ADDRESSES</span>
