@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-const IDLE_DELAY_MS = 7_000;
+const IDLE_DELAY_MS = 5_000;
 const FALLBACK_SCREENSAVER_IMAGES = [
   "/fidenza-hover.webp",
   "/ringers-hover.webp",
@@ -112,6 +112,10 @@ function Maxand98Wordmark() {
 function IdleScreensaver() {
   const [images, setImages] = useState(FALLBACK_SCREENSAVER_IMAGES);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -159,8 +163,113 @@ function IdleScreensaver() {
     };
   }, [images]);
 
-  return <div className={`screensaver${activeImage ? " is-active" : ""}`} aria-hidden="true">
-    {activeImage ? <img src={activeImage} alt="" /> : null}
+  useEffect(() => {
+    if (!activeImage || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    const item = itemRef.current;
+    const image = imageRef.current;
+    if (!container || !canvas || !item || !image) return;
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) return;
+
+    const state = {
+      x: 0,
+      y: 0,
+      lastX: 0,
+      lastY: 0,
+      width: 0,
+      height: 0,
+      velocityX: 176 * Math.cos(Math.PI / 4),
+      velocityY: 176 * Math.sin(Math.PI / 4),
+      lastTime: 0,
+      imageIndex: Math.max(0, images.indexOf(activeImage)),
+    };
+    let frame = 0;
+
+    const updateItemSize = () => {
+      const rect = item.getBoundingClientRect();
+      state.width = rect.width;
+      state.height = rect.height;
+      state.x = Math.max(0, Math.min(state.x, container.clientWidth - state.width));
+      state.y = Math.max(0, Math.min(state.y, container.clientHeight - state.height));
+      state.lastX = state.x;
+      state.lastY = state.y;
+    };
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(container.clientWidth * dpr);
+      canvas.height = Math.round(container.clientHeight * dpr);
+      canvas.style.width = `${container.clientWidth}px`;
+      canvas.style.height = `${container.clientHeight}px`;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.fillStyle = "#050505";
+      context.fillRect(0, 0, container.clientWidth, container.clientHeight);
+      updateItemSize();
+    };
+
+    const changeImage = () => {
+      if (images.length < 2) return;
+      let nextIndex = state.imageIndex;
+      while (nextIndex === state.imageIndex) nextIndex = Math.floor(Math.random() * images.length);
+      state.imageIndex = nextIndex;
+      const next = images[nextIndex];
+      if (next) image.src = next;
+    };
+
+    const drawTrail = () => {
+      if (!image.complete || !image.naturalWidth || !state.width || !state.height) return;
+      for (let step = 0; step <= 5; step += 1) {
+        const progress = step / 5;
+        const x = state.lastX + (state.x - state.lastX) * progress;
+        const y = state.lastY + (state.y - state.lastY) * progress;
+        context.drawImage(image, x, y, state.width, state.height);
+      }
+    };
+
+    const animate = (time: number) => {
+      const delta = state.lastTime ? Math.min(time - state.lastTime, 33.3) / 1000 : 0;
+      state.lastTime = time;
+      state.lastX = state.x;
+      state.lastY = state.y;
+      state.x += state.velocityX * delta;
+      state.y += state.velocityY * delta;
+      let bounced = false;
+      const maxX = Math.max(0, container.clientWidth - state.width);
+      const maxY = Math.max(0, container.clientHeight - state.height);
+      if (state.x <= 0 || state.x >= maxX) {
+        state.velocityX *= -1;
+        state.x = Math.max(0, Math.min(state.x, maxX));
+        bounced = true;
+      }
+      if (state.y <= 0 || state.y >= maxY) {
+        state.velocityY *= -1;
+        state.y = Math.max(0, Math.min(state.y, maxY));
+        bounced = true;
+      }
+      if (bounced) changeImage();
+      item.style.transform = `translate3d(${state.x}px,${state.y}px,0)`;
+      drawTrail();
+      frame = requestAnimationFrame(animate);
+    };
+
+    image.addEventListener("load", updateItemSize);
+    window.addEventListener("resize", resize);
+    resize();
+    frame = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(frame);
+      image.removeEventListener("load", updateItemSize);
+      window.removeEventListener("resize", resize);
+    };
+  }, [activeImage, images]);
+
+  return <div ref={containerRef} className={`screensaver${activeImage ? " is-active" : ""}`} aria-hidden="true">
+    <canvas ref={canvasRef} className="screensaver-canvas" />
+    {activeImage ? <div ref={itemRef} className="screensaver-item">
+      <img ref={imageRef} src={activeImage} alt="" />
+    </div> : null}
   </div>;
 }
 
