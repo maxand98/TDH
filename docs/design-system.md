@@ -41,6 +41,13 @@ The CSS tokens are:
 - All motion stops when the visitor requests reduced motion.
 - Navigation, metadata, descriptive copy, and the calculate control remain at least 14px and maintain strong contrast over the image.
 
+## Attribution footer
+
+- The footer uses the canonical animated `MAXAND98` wordmark: a rapid display-face roll followed by a moving light sweep.
+- The signature field uses maxand98 blue (`#0a30e6`) and links to `maxand98.com`.
+- Every release carries the explicit statement `CC0 · NO RIGHTS RESERVED`, linked to CC0 1.0 Universal.
+- Reduced-motion visitors see the settled white wordmark with no font roll or light sweep.
+
 ## Prohibited patterns
 
 - Text below 14px, except a non-semantic typographic mark such as the registered symbol in the wordmark.

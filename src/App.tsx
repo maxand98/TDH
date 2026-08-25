@@ -1,9 +1,111 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { calculateArtistTdh } from "./domain/artist-tdh";
 import { DEMO_INPUT } from "./demo";
 
 const formatter = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 2 });
 const metric = (value: number) => formatter.format(value);
+
+const MAXAND98_FACES = [
+  { family: "'Monoton', cursive", scale: ".72", spacing: ".02em" },
+  { family: "'UnifrakturMaguntia', cursive", scale: ".95", spacing: "0" },
+  { family: "'Press Start 2P', monospace", scale: ".5", spacing: "-.04em" },
+  { family: "'Rye', serif", scale: ".78", spacing: "0" },
+  { family: "'Yesteryear', cursive", scale: "1", spacing: "0" },
+  { family: "'Bungee Inline', sans-serif", scale: ".74", spacing: "0" },
+  { family: "'Faster One', system-ui", scale: ".74", spacing: "0" },
+  { family: "'Rubik Glitch', system-ui", scale: ".84", spacing: "0" },
+] as const;
+
+function Maxand98Wordmark() {
+  const wordmarkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    const wordmark = wordmarkRef.current;
+    if (!wordmark || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const base = wordmark.querySelector<HTMLElement>(".mx-wordmark-base");
+    const glow = wordmark.querySelector<HTMLElement>(".mx-wordmark-glow");
+    if (!base || !glow) return;
+
+    MAXAND98_FACES.forEach(({ family }) => {
+      void document.fonts.load(`400 100px ${family.split(",")[0]}`, "MAXAND98");
+    });
+
+    const colours = ["#fff", "rgba(255,255,255,.65)", "#bcd0ff", "#7e8cff", "#fff", "#dfe6ff"];
+    const shuffledFaces = () => [...MAXAND98_FACES].sort(() => Math.random() - .5);
+    const settle = () => {
+      wordmark.style.removeProperty("font-family");
+      wordmark.style.removeProperty("font-weight");
+      wordmark.style.removeProperty("letter-spacing");
+      wordmark.style.removeProperty("--mx-fs");
+      base.style.removeProperty("color");
+      glow.classList.remove("mx-sweep");
+    };
+
+    let phase: "rest" | "roll" | "spot" = "rest";
+    let phaseStart: number | null = null;
+    let cutIndex = -1;
+    let fontRun = shuffledFaces();
+    let frame = 0;
+    const animate = (timestamp: number) => {
+      frame = requestAnimationFrame(animate);
+      const rect = wordmark.getBoundingClientRect();
+      if (rect.bottom < -100 || rect.top > window.innerHeight + 100) {
+        if (phaseStart !== null) settle();
+        phase = "rest";
+        phaseStart = null;
+        return;
+      }
+      if (phaseStart === null) {
+        phaseStart = timestamp;
+        return;
+      }
+      const elapsed = timestamp - phaseStart;
+      if (phase === "rest") {
+        if (elapsed >= 900) {
+          phase = "roll";
+          phaseStart = timestamp;
+          fontRun = shuffledFaces();
+          cutIndex = -1;
+        }
+        return;
+      }
+      if (phase === "roll") {
+        const nextCut = Math.min(Math.floor(elapsed / 140), 18);
+        if (nextCut !== cutIndex) {
+          cutIndex = nextCut;
+          const face = fontRun[nextCut % fontRun.length] ?? MAXAND98_FACES[0];
+          wordmark.style.fontFamily = face.family;
+          wordmark.style.fontWeight = "400";
+          wordmark.style.letterSpacing = face.spacing;
+          wordmark.style.setProperty("--mx-fs", face.scale);
+          base.style.color = colours[Math.floor(Math.random() * colours.length)] ?? "#fff";
+        }
+        if (elapsed >= 2660) {
+          settle();
+          glow.classList.add("mx-sweep");
+          phase = "spot";
+          phaseStart = timestamp;
+        }
+        return;
+      }
+      if (elapsed >= 3350) {
+        glow.classList.remove("mx-sweep");
+        phase = "rest";
+        phaseStart = timestamp;
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(frame);
+      settle();
+    };
+  }, []);
+
+  return <a ref={wordmarkRef} className="mx-wordmark" href="https://maxand98.com/" aria-label="maxand98 home">
+    <span className="mx-wordmark-base">MAXAND98</span>
+    <span className="mx-wordmark-glow" aria-hidden="true">MAXAND98</span>
+  </a>;
+}
 
 export default function App() {
   const [source, setSource] = useState(() => JSON.stringify(DEMO_INPUT, null, 2));
@@ -99,9 +201,16 @@ export default function App() {
       </section>
 
       <footer>
-        <a className="footer-mark" href="#top">myTDH</a>
-        <div><span>Public foundation / 2026</span><span>Methodology is evidence, not judgment.</span></div>
-        <a href="https://github.com/maxand98/TDH">VIEW SOURCE</a>
+        <div className="footer-top">
+          <a className="footer-mark" href="#top">myTDH</a>
+          <div className="footer-meta"><span>Public foundation / 2026</span><span>Methodology is evidence, not judgment.</span></div>
+          <a className="footer-source" href="https://github.com/maxand98/TDH">VIEW SOURCE</a>
+        </div>
+        <Maxand98Wordmark />
+        <div className="footer-license">
+          <span>A MAXAND98 PUBLIC INSTRUMENT</span>
+          <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 · NO RIGHTS RESERVED</a>
+        </div>
       </footer>
     </main>
   );
