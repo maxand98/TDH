@@ -425,11 +425,13 @@ function CalculatePage() {
 
   const pollJob = async (initial: RasterRegisterJob, run: number) => {
     let current = initial;
+    const statusUrl = initial.jobUrl;
+    if (!statusUrl) throw new Error("The register job did not provide a status URL");
     while (run === calculationRun.current && current.state !== "complete" && current.state !== "errored") {
       await new Promise((resolve) => window.setTimeout(resolve, current.state === "queued" ? 1_500 : 2_500));
-      if (!current.jobUrl) throw new Error("The register job did not provide a status URL");
-      const response = await fetch(current.jobUrl);
-      current = await response.json() as RasterRegisterJob;
+      const response = await fetch(statusUrl);
+      const update = await response.json() as RasterRegisterJob;
+      current = { ...update, jobUrl: update.jobUrl ?? statusUrl };
       if (run !== calculationRun.current) return;
       setJob(current);
     }

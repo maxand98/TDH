@@ -12,7 +12,7 @@ function utcDate() {
 }
 
 function jobId(slug: string) {
-  return `${slug}-${utcDate().replaceAll("-", "")}-v1`;
+  return `${slug}-${utcDate().replaceAll("-", "")}-v2`;
 }
 
 function jobUrl(id: string) {
@@ -179,10 +179,10 @@ export default {
         const instance = await env.RASTER_REGISTER.get(id);
         const status = await instance.status();
         if (status.status === "errored") {
-          return json({ ...progress, state: "errored", stage: "errored", error: status.error?.message ?? "The register job failed" });
+          return json({ ...progress, jobUrl: jobUrl(id), state: "errored", stage: "errored", error: status.error?.message ?? "The register job failed" });
         }
       }
-      return json(progress);
+      return json({ ...progress, jobUrl: jobUrl(id) });
     }
 
     if (request.method === "POST" && url.pathname === "/api/calculate") {
