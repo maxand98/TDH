@@ -533,7 +533,7 @@ function CalculatePage() {
           <strong>{number.format(result.corpus.eligible_collector_addresses)}</strong>
           <span>ELIGIBLE COLLECTOR ADDRESSES</span>
         </div>
-        <p className="register-explainer">Every current collector is shown. Each score adds uninterrupted days held across the artist’s Raster-indexed oeuvre, with smaller editions receiving proportionally more weight. This is an artist-specific equivalent of abTDH, not oTDH.</p>
+        <div className="register-explainer">Every current collector is shown. Each score adds uninterrupted days held across the artist’s Raster-indexed oeuvre, with smaller editions receiving proportionally more weight. This is an artist-specific equivalent of abTDH, not oTDH.</div>
         <dl>
           <div><dt>INDEXED ARTWORKS</dt><dd>{number.format(result.corpus.artworks)}</dd></div>
           <div><dt>INDEXED TOKENS</dt><dd>{number.format(result.corpus.tokens)}</dd></div>
