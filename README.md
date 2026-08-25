@@ -4,7 +4,7 @@ An open web app that lets any digital artist calculate a transparent Total Days 
 
 Working product name: **myTDH**
 
-Domain: **mytdh.xyz** (registered with Cloudflare Registrar; app deployment pending)
+Production: **[mytdh.xyz](https://mytdh.xyz)**
 
 ## What it measures
 
@@ -35,10 +35,11 @@ Phase 0/1 foundation implemented:
 - reacquisition resets and declared-identity internal transfer preservation;
 - artist, treasury, burn, and custody-address exclusions;
 - Cloudflare Worker health, methodology, and calculation endpoints;
-- interactive methodology lab;
+- responsive editorial methodology lab;
+- Cloudflare deployment on the `mytdh.xyz` custom domain;
 - hand-worked fixtures and failure-state tests.
 
-Chain discovery and production backfill are not yet connected, and the application has not yet been deployed.
+Chain discovery and production backfill are not yet connected. The deployed foundation currently calculates from a declared current-holdings JSON dataset.
 
 - [Product specification](docs/product-spec.md)
 - [Methodology](docs/methodology.md)
