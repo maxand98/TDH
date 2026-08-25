@@ -1,14 +1,15 @@
 # Domain research
 
-Checked in the signed-in Cloudflare Registrar account on 25 August 2026. Availability and pricing can change until registration completes. No domain was purchased.
+Checked in the signed-in Cloudflare Registrar account on 25-26 August 2026. `mytdh.xyz` was registered successfully and is active in Cloudflare Registrar.
 
 ## Recommendation
 
 **mytdh.xyz**
 
-- Available
-- US$12.30 initial registration
+- Registered on 25 August 2026 for US$12.30
 - US$11.20/year renewal shown by Cloudflare
+- Auto-renew enabled
+- Expires 26 August 2027 in Cloudflare Registrar
 - Short, memorable, aligned with the self-service product
 - `.xyz` is already consistent with the wider AB5D ecosystem
 
@@ -29,6 +30,6 @@ Checked in the signed-in Cloudflare Registrar account on 25 August 2026. Availab
 - `mytdh.ai` was unavailable.
 - `mytdh.art` cannot currently be registered through Cloudflare because Cloudflare Registrar reported that `.art` is not supported.
 
-## Purchase boundary
+## Registration record
 
-Registration creates a financial transaction and should occur only after explicit approval of the exact domain and displayed checkout total. Re-check availability and renewal terms immediately before purchase.
+Cloudflare confirmed the purchase and lists `mytdh.xyz` as Active. The domain is registered but the web app has not yet been deployed to it.

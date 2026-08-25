@@ -4,7 +4,7 @@ An open web app that lets any digital artist calculate a transparent Total Days 
 
 Working product name: **myTDH**
 
-Provisional domain: **mytdh.xyz** (available on Cloudflare Registrar on 25 August 2026; not purchased)
+Domain: **mytdh.xyz** (registered with Cloudflare Registrar; app deployment pending)
 
 ## What it measures
 
