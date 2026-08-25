@@ -1,9 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { calculateArtistTdh } from "./domain/artist-tdh";
-import { DEMO_INPUT } from "./demo";
-
-const formatter = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 2 });
-const metric = (value: number) => formatter.format(value);
+import { useEffect, useRef, useState } from "react";
 const IDLE_DELAY_MS = 7_000;
 const FALLBACK_SCREENSAVER_IMAGES = [
   "/fidenza-hover.webp",
@@ -169,16 +164,83 @@ function IdleScreensaver() {
   </div>;
 }
 
-export default function App() {
-  const [source, setSource] = useState(() => JSON.stringify(DEMO_INPUT, null, 2));
-  const calculation = useMemo(() => {
-    try {
-      return { result: calculateArtistTdh(JSON.parse(source) as unknown), error: null };
-    } catch (error) {
-      return { result: null, error: error instanceof Error ? error.message : "Invalid input" };
-    }
-  }, [source]);
+type RasterTdhResponse = {
+  covered?: boolean;
+  corpus?: string;
+  message?: string;
+  snapshotAt?: string;
+  error?: string;
+  artist?: {
+    artist: string;
+    otdh: number;
+    collector_identities: number;
+    projects: number;
+    current_works: number;
+    raw_collector_days: number;
+    rank: number;
+  };
+};
 
+const number = new Intl.NumberFormat("en-AU");
+
+function CalculatePage() {
+  const [profile, setProfile] = useState("");
+  const [result, setResult] = useState<RasterTdhResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const calculate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setResult(null);
+    try {
+      const response = await fetch(`/api/raster-tdh?profile=${encodeURIComponent(profile)}`);
+      const data = await response.json() as RasterTdhResponse;
+      setResult(data);
+    } catch {
+      setResult({ error: "Unable to reach the TDH service" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return <main className="calculate-page">
+    <header className="calculate-header">
+      <a href="/">myTDH</a>
+      <span>RASTER PROFILE CALCULATOR</span>
+    </header>
+    <section className="calculate-stage">
+      <p className="calculate-kicker">ARTIST TDH / PUBLIC INSTRUMENT</p>
+      <h1>PASTE YOUR<br />RASTER PROFILE.</h1>
+      <form onSubmit={(event) => { void calculate(event); }}>
+        <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
+        <div className="profile-entry">
+          <input id="raster-profile" type="url" inputMode="url" placeholder="https://www.raster.art/artist/casey-reas" value={profile} onChange={(event) => setProfile(event.target.value)} required />
+          <button type="submit" disabled={loading}>{loading ? "READING" : "CALCULATE"}</button>
+        </div>
+      </form>
+      <p className="coverage-note">CURRENT COVERAGE / AB[500] DECLARED CORPUS</p>
+      {result ? <div className="profile-result" aria-live="polite">
+        {result.artist ? <>
+          <div className="profile-score">
+            <span>{result.artist.artist}</span>
+            <strong>{number.format(result.artist.otdh)}</strong>
+            <small>ARTIST TDH</small>
+          </div>
+          <dl>
+            <div><dt>COLLECTOR IDENTITIES</dt><dd>{number.format(result.artist.collector_identities)}</dd></div>
+            <div><dt>PROJECTS</dt><dd>{number.format(result.artist.projects)}</dd></div>
+            <div><dt>CURRENT WORKS</dt><dd>{number.format(result.artist.current_works)}</dd></div>
+            <div><dt>RAW COLLECTOR-DAYS</dt><dd>{number.format(result.artist.raw_collector_days)}</dd></div>
+          </dl>
+          <p>{result.corpus} / SNAPSHOT {result.snapshotAt?.slice(0, 10)}</p>
+        </> : <p className="profile-message">{result.error ?? result.message}</p>}
+      </div> : null}
+    </section>
+  </main>;
+}
+
+export default function App() {
+  if (window.location.pathname.replace(/\/$/, "") === "/calculate") return <CalculatePage />;
   const moveHeroLetter = (event: React.PointerEvent<HTMLSpanElement>) => {
     const letter = event.currentTarget;
     const bounds = letter.getBoundingClientRect();
@@ -235,78 +297,12 @@ export default function App() {
         </h1>
         <div className="hero-foot">
           <p>A transparent holding-duration signal for any digital artist.</p>
-          <a className="primary-link" href="#lab">Calculate yours</a>
+          <a className="primary-link" href="/calculate">Calculate yours</a>
           <p className="hero-index">ARTIST / OEUVRE / COLLECTOR / TIME</p>
         </div>
       </section>
 
-      <div className="ticker" aria-hidden="true">
-        <span>HOLDING IS A RELATIONSHIP</span><b>+</b><span>DURATION IS EVIDENCE</span><b>+</b>
-        <span>THE FORMULA STAYS VISIBLE</span><b>+</b>
-      </div>
-
-      <section className="method" id="method">
-        <div className="method-intro">
-          <p className="section-number">00_1 / THE METHOD</p>
-          <h2>Time held.<br /><em>Not value claimed.</em></h2>
-          <p className="method-note">A public instrument for reading collector commitment across a declared body of work.</p>
-        </div>
-        <div className="method-copy">
-          <div className="formula" aria-label="TDH formula">
-            <span>PROJECT SCORE</span><strong>median days × log(1 + identities)</strong>
-            <i>then combined with diminishing returns</i>
-          </div>
-          <dl>
-            <div><dt>01 / Counts</dt><dd>Current uninterrupted holding</dd></div>
-            <div><dt>02 / Resists</dt><dd>Supply, duplicates, self-holding</dd></div>
-            <div><dt>03 / Excludes</dt><dd>Price, volume, reputation</dd></div>
-            <div><dt>04 / Publishes</dt><dd>Formula, inputs, coverage</dd></div>
-          </dl>
-        </div>
-      </section>
-
-      <section className="manifesto" aria-label="Principle">
-        <p className="section-number">A SIGNAL WITH RECEIPTS</p>
-        <p>Every number should reveal<br />what made it.</p><span>∞</span>
-      </section>
-
-      <section className="lab" id="lab">
-        <div className="lab-heading">
-          <p className="section-number">00_2 / METHODOLOGY LAB</p>
-          <h2>Inspect every<br /><em>input.</em></h2>
-          <p>Paste a declared current-holdings dataset. The browser calculates the result immediately; nothing here asks you to trust an unexplained score.</p>
-        </div>
-        <div className="workbench">
-          <div className="panel-label"><label htmlFor="input-json">Current-holdings JSON</label><span>EDITABLE / LIVE</span></div>
-          <textarea id="input-json" spellCheck={false} value={source} onChange={(event) => setSource(event.target.value)} />
-        </div>
-        <div className="result" aria-live="polite">
-          {calculation.error ? <div className="error"><span>Input incomplete</span>{calculation.error}</div> : calculation.result ? <>
-            <div className="result-heading"><p className="result-label">Artist TDH / {calculation.result.methodology}</p><span>CALCULATED NOW</span></div>
-            <div className="score-lockup"><strong className="score">{metric(calculation.result.tdh)}</strong><span>TOTAL<br />DAYS<br />HELD</span></div>
-            <div className="metric-grid">
-              <div><span>Collector identities</span><strong>{metric(calculation.result.collectorIdentities)}</strong></div>
-              <div><span>Eligible projects</span><strong>{metric(calculation.result.eligibleProjects)}</strong></div>
-              <div><span>Eligible works</span><strong>{metric(calculation.result.eligibleWorks)}</strong></div>
-              <div><span>Raw collector-days</span><strong>{metric(calculation.result.rawCollectorDays)}</strong></div>
-            </div>
-            <div className="projects"><p className="projects-label">PROJECT BREAKDOWN</p>
-              {calculation.result.projects.map((project, index) => <article key={project.id}>
-                <b>{String(index + 1).padStart(2, "0")}</b><span>{project.label}</span>
-                <small>{project.collectorIdentities} identities · median {metric(project.medianIdentityHoldDays)} days</small>
-                <strong>{metric(project.score)}</strong>
-              </article>)}
-            </div>
-          </> : null}
-        </div>
-      </section>
-
       <footer>
-        <div className="footer-top">
-          <a className="footer-mark" href="#top">myTDH</a>
-          <div className="footer-meta"><span>Public foundation / 2026</span><span>Methodology is evidence, not judgment.</span></div>
-          <a className="footer-source" href="https://github.com/maxand98/TDH">VIEW SOURCE</a>
-        </div>
         <Maxand98Wordmark />
         <div className="footer-license">
           <span>A MAXAND98 PUBLIC INSTRUMENT</span>

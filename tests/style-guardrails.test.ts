@@ -16,7 +16,17 @@ describe("visual system guardrails", () => {
 
   it("keeps artwork clipped inside the interactive hero letters", () => {
     expect(stylesheet).toContain(".hero-letter { -webkit-background-clip:text; background-clip:text;");
+    expect(stylesheet).toContain("display:inline-block; line-height:1;");
+    expect(stylesheet).toContain('.hero-letter-y { background-image:url("/autoglyph-hover.svg"); background-size:auto 150%; }');
     expect(appSource).not.toContain("hero-art");
+  });
+
+  it("keeps the public page to the hero and attribution footer", () => {
+    expect(appSource).not.toContain('className="method"');
+    expect(appSource).not.toContain('className="manifesto"');
+    expect(appSource).not.toContain('className="lab"');
+    expect(appSource).not.toContain('className="footer-top"');
+    expect(appSource).toContain('href="/calculate"');
   });
 
   it("uses the live AB5D collection for the idle field", () => {

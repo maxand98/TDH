@@ -37,9 +37,9 @@ The CSS tokens are:
 
 - The opening viewport is a black cosmic field with an original photographic nebula texture.
 - `myTDH` spans nearly the full viewport width, with each letter kept as a distinct interactive form and a visible optical gap between neighbours.
-- The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome.
+- The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome. `Calculate yours` opens the dedicated Raster-profile calculator at `/calculate`.
 - The main wordmark uses the heaviest display weight, reinforced by a restrained white stroke.
-- Each letter owns one artwork reveal: `m` / Fidenza, `y` / Autoglyph, `T` / Ringers, `D` / Fragments, and `H` / Reas. Hover or keyboard focus reveals that artwork only inside the letterform; the cosmic hero behind it never changes.
+- Each letter owns one artwork reveal: `m` / Fidenza, `y` / Autoglyph, `T` / Ringers, `D` / Fragments, and `H` / Reas. Hover or keyboard focus reveals that artwork only inside the letterform; the cosmic hero behind it never changes. The paint box must cover every glyph completely, including overshoots and the `y` descender.
 - Pointer movement may shift and tilt only the active letter. The movement stays restrained and returns cleanly to rest when the pointer leaves.
 - Non-active letters and supporting copy remain white and unchanged throughout every letter interaction.
 - Cosmic motion combines visible photographic drift with moving blue and copper luminosity. It must never compete with the wordmark or impair reading.
@@ -48,7 +48,8 @@ The CSS tokens are:
 
 ## Attribution footer
 
-- The footer uses the canonical animated `MAXAND98` wordmark: a rapid display-face roll followed by a moving light sweep.
+- The public page contains only the hero and attribution footer. The TDH methodology and calculator remain project capabilities, not homepage sections.
+- The footer uses the canonical animated `MAXAND98` wordmark at signature scale: a rapid display-face roll followed by a moving light sweep. It does not repeat the site title, method statement, or source link above the signature.
 - The signature field uses maxand98 blue (`#0a30e6`) and links to `maxand98.com`.
 - Every release carries the explicit statement `CC0 · NO RIGHTS RESERVED`, linked to CC0 1.0 Universal.
 - Reduced-motion visitors see the settled white wordmark with no font roll or light sweep.
