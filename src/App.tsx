@@ -120,8 +120,6 @@ export default function App() {
   return (
     <main>
       <section className="hero" id="top">
-        <div className="hero-meta hero-meta-left"><span>Measure</span><strong>Total Days Held</strong></div>
-        <div className="hero-meta hero-meta-right"><span>Signal</span><strong>Time × Breadth</strong></div>
         <h1 className="hero-title" aria-label="my Total Days Held">myTDH</h1>
         <div className="hero-foot">
           <p>A transparent holding-duration signal for any digital artist.</p>

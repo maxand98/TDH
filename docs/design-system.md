@@ -37,8 +37,9 @@ The CSS tokens are:
 
 - The opening viewport is a black cosmic field with an original photographic nebula texture.
 - `myTDH` is one uninterrupted wordmark and spans nearly the full viewport width.
-- The hero has no masthead or menu bar; the identity and calculation action carry the opening screen without navigation chrome.
-- Cosmic motion is slow drift and light breathing only. It must never compete with the wordmark or impair reading.
+- The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome.
+- The main wordmark uses the heaviest display weight, reinforced by a restrained white stroke.
+- Cosmic motion combines visible photographic drift with moving blue and copper luminosity. It must never compete with the wordmark or impair reading.
 - All motion stops when the visitor requests reduced motion.
 - Navigation, metadata, descriptive copy, and the calculate control remain at least 14px and maintain strong contrast over the image.
 
