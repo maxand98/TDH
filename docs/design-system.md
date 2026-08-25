@@ -36,9 +36,12 @@ The CSS tokens are:
 ## Hero
 
 - The opening viewport is a black cosmic field with an original photographic nebula texture.
-- `myTDH` is one uninterrupted wordmark and spans nearly the full viewport width.
+- `myTDH` spans nearly the full viewport width, with each letter kept as a distinct interactive form and a visible optical gap between neighbours.
 - The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome.
 - The main wordmark uses the heaviest display weight, reinforced by a restrained white stroke.
+- Each letter owns one artwork reveal: `m` / Fidenza, `y` / Autoglyph, `T` / Ringers, `D` / Fragments, and `H` / Reas. Hover or keyboard focus transitions the full hero background to that artwork.
+- Pointer movement may shift and tilt only the active letter. The movement stays restrained and returns cleanly to rest when the pointer leaves.
+- Light artwork states switch the wordmark and supporting copy to near-black; dark artwork states retain white. Contrast must remain readable throughout every transition.
 - Cosmic motion combines visible photographic drift with moving blue and copper luminosity. It must never compete with the wordmark or impair reading.
 - All motion stops when the visitor requests reduced motion.
 - Navigation, metadata, descriptive copy, and the calculate control remain at least 14px and maintain strong contrast over the image.

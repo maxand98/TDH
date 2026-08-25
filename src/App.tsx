@@ -109,6 +109,7 @@ function Maxand98Wordmark() {
 
 export default function App() {
   const [source, setSource] = useState(() => JSON.stringify(DEMO_INPUT, null, 2));
+  const [heroArtwork, setHeroArtwork] = useState<"fidenza" | "autoglyph" | "ringers" | "fragments" | "reas" | null>(null);
   const calculation = useMemo(() => {
     try {
       return { result: calculateArtistTdh(JSON.parse(source) as unknown), error: null };
@@ -117,10 +118,80 @@ export default function App() {
     }
   }, [source]);
 
+  const moveHeroLetter = (event: React.PointerEvent<HTMLSpanElement>) => {
+    const letter = event.currentTarget;
+    const bounds = letter.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width - .5;
+    const y = (event.clientY - bounds.top) / bounds.height - .5;
+    letter.style.setProperty("--letter-x", `${x * 12}px`);
+    letter.style.setProperty("--letter-y", `${y * 8}px`);
+    letter.style.setProperty("--letter-rx", `${y * -7}deg`);
+    letter.style.setProperty("--letter-ry", `${x * 10}deg`);
+  };
+
+  const restHeroLetter = (event: React.PointerEvent<HTMLSpanElement>) => {
+    event.currentTarget.style.removeProperty("--letter-x");
+    event.currentTarget.style.removeProperty("--letter-y");
+    event.currentTarget.style.removeProperty("--letter-rx");
+    event.currentTarget.style.removeProperty("--letter-ry");
+    setHeroArtwork(null);
+  };
+
   return (
     <main>
-      <section className="hero" id="top">
-        <h1 className="hero-title" aria-label="my Total Days Held">myTDH</h1>
+      <section className={`hero${heroArtwork ? ` is-${heroArtwork}` : ""}`} id="top">
+        <div className="hero-art hero-art-fidenza" aria-hidden="true" />
+        <div className="hero-art hero-art-autoglyph" aria-hidden="true" />
+        <div className="hero-art hero-art-ringers" aria-hidden="true" />
+        <div className="hero-art hero-art-fragments" aria-hidden="true" />
+        <div className="hero-art hero-art-reas" aria-hidden="true" />
+        <h1 className="hero-title" aria-label="my Total Days Held">
+          <span
+            className="hero-letter hero-letter-m"
+            tabIndex={0}
+            onPointerEnter={() => setHeroArtwork("fidenza")}
+            onPointerMove={moveHeroLetter}
+            onPointerLeave={restHeroLetter}
+            onFocus={() => setHeroArtwork("fidenza")}
+            onBlur={() => setHeroArtwork(null)}
+          >m</span>
+          <span
+            className="hero-letter hero-letter-y"
+            tabIndex={0}
+            onPointerEnter={() => setHeroArtwork("autoglyph")}
+            onPointerMove={moveHeroLetter}
+            onPointerLeave={restHeroLetter}
+            onFocus={() => setHeroArtwork("autoglyph")}
+            onBlur={() => setHeroArtwork(null)}
+          >y</span>
+          <span
+            className="hero-letter hero-letter-t"
+            tabIndex={0}
+            onPointerEnter={() => setHeroArtwork("ringers")}
+            onPointerMove={moveHeroLetter}
+            onPointerLeave={restHeroLetter}
+            onFocus={() => setHeroArtwork("ringers")}
+            onBlur={() => setHeroArtwork(null)}
+          >T</span>
+          <span
+            className="hero-letter hero-letter-d"
+            tabIndex={0}
+            onPointerEnter={() => setHeroArtwork("fragments")}
+            onPointerMove={moveHeroLetter}
+            onPointerLeave={restHeroLetter}
+            onFocus={() => setHeroArtwork("fragments")}
+            onBlur={() => setHeroArtwork(null)}
+          >D</span>
+          <span
+            className="hero-letter hero-letter-h"
+            tabIndex={0}
+            onPointerEnter={() => setHeroArtwork("reas")}
+            onPointerMove={moveHeroLetter}
+            onPointerLeave={restHeroLetter}
+            onFocus={() => setHeroArtwork("reas")}
+            onBlur={() => setHeroArtwork(null)}
+          >H</span>
+        </h1>
         <div className="hero-foot">
           <p>A transparent holding-duration signal for any digital artist.</p>
           <a className="primary-link" href="#lab">Calculate yours</a>
