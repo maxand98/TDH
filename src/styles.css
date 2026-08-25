@@ -42,7 +42,7 @@ main { min-height:100vh; overflow:hidden; }
 .hero-letter-h { width:.592em; -webkit-mask-image:url("/glyph-h.svg"); mask-image:url("/glyph-h.svg"); }
 .hero-letter-m,.hero-letter-y,.hero-letter-t,.hero-letter-d,.hero-letter-h { cursor:crosshair; outline:none; }
 .hero-letter-m:hover,.hero-letter-m:focus-visible { background-image:url("/fidenza-hover.webp"); }
-.hero-letter-y:hover,.hero-letter-y:focus-visible { background-image:url("/autoglyph-hover.svg"); }
+.hero-letter-y:hover,.hero-letter-y:focus-visible { background-image:url("/autoglyph-hover.svg"); background-size:auto 140%; }
 .hero-letter-t:hover,.hero-letter-t:focus-visible { background-image:url("/ringers-hover.webp"); }
 .hero-letter-d:hover,.hero-letter-d:focus-visible { background-image:url("/fragments-hover.webp"); }
 .hero-letter-h:hover,.hero-letter-h:focus-visible { background-image:url("/reas-hover.webp"); }

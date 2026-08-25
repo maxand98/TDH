@@ -17,7 +17,7 @@ describe("visual system guardrails", () => {
   it("keeps artwork clipped inside the interactive hero letters", () => {
     expect(stylesheet).toContain("-webkit-mask-size:100% 100%; mask-size:100% 100%;");
     expect(stylesheet).toContain('.hero-letter-y { width:.456em; -webkit-mask-image:url("/glyph-y.svg");');
-    expect(stylesheet).toContain('.hero-letter-y:hover,.hero-letter-y:focus-visible { background-image:url("/autoglyph-hover.svg"); }');
+    expect(stylesheet).toContain('.hero-letter-y:hover,.hero-letter-y:focus-visible { background-image:url("/autoglyph-hover.svg"); background-size:auto 140%; }');
     expect(appSource).not.toContain("hero-art");
   });
 
