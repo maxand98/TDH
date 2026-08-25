@@ -287,6 +287,8 @@ type RasterCollector = {
 
 type RasterTdhResponse = {
   covered?: boolean;
+  methodology?: string;
+  profile?: string;
   message?: string;
   snapshotAt?: string;
   error?: string;
@@ -310,12 +312,91 @@ type RasterTdhResponse = {
 const number = new Intl.NumberFormat("en-AU");
 const COLLECTORS_PER_PAGE = 100;
 
+function Celebration({ run }: { run: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!run || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
+    const colors = ["#ffffff", "#ef3e24", "#ffca3a", "#7bc8ff", "#d98cff"];
+    const particles = Array.from({ length: 320 }, (_, index) => {
+      const burst = index % 8;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 90 + Math.random() * 260;
+      return {
+        x: window.innerWidth * (.12 + (burst / 7) * .76),
+        y: window.innerHeight * (.12 + Math.random() * .42),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        delay: burst * 90,
+        color: colors[index % colors.length]!,
+        size: 1.5 + Math.random() * 3.5,
+      };
+    });
+    const resize = () => {
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(window.innerWidth * ratio);
+      canvas.height = Math.round(window.innerHeight * ratio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const started = performance.now();
+    let frame = 0;
+    const animate = (time: number) => {
+      const elapsed = time - started;
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      particles.forEach((particle) => {
+        const age = elapsed - particle.delay;
+        if (age < 0 || age > 1700) return;
+        const seconds = age / 1000;
+        const opacity = Math.max(0, 1 - age / 1700);
+        const x = particle.x + particle.vx * seconds;
+        const y = particle.y + particle.vy * seconds + 145 * seconds * seconds;
+        context.globalAlpha = opacity;
+        context.fillStyle = particle.color;
+        context.fillRect(x, y, particle.size, particle.size * 2.4);
+      });
+      context.globalAlpha = 1;
+      if (elapsed < 2350) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    };
+  }, [run]);
+
+  return <canvas ref={canvasRef} className="celebration" aria-hidden="true" />;
+}
+
+function downloadExport(filename: string, content: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value: string | number | null) {
+  const text = value === null ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
 function CalculatePage() {
   const [profile, setProfile] = useState("");
   const [result, setResult] = useState<RasterTdhResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [collectorQuery, setCollectorQuery] = useState("");
   const [collectorPage, setCollectorPage] = useState(0);
+  const [celebrationRun, setCelebrationRun] = useState(0);
+  const [apiCopied, setApiCopied] = useState(false);
 
   const calculate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -327,6 +408,7 @@ function CalculatePage() {
       const response = await fetch(`/api/raster-collector-tdh?profile=${encodeURIComponent(profile)}&limit=5000`);
       const data = await response.json() as RasterTdhResponse;
       setResult(data);
+      if (data.artist && data.collectors) setCelebrationRun((run) => run + 1);
     } catch {
       setResult({ error: "Unable to reach the TDH service" });
     } finally {
@@ -340,23 +422,42 @@ function CalculatePage() {
   });
   const pageCount = Math.max(1, Math.ceil(collectors.length / COLLECTORS_PER_PAGE));
   const visibleCollectors = collectors.slice(collectorPage * COLLECTORS_PER_PAGE, (collectorPage + 1) * COLLECTORS_PER_PAGE);
+  const exportSlug = result?.artist?.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "artist";
+  const apiUrl = `${window.location.origin}/api/raster-collector-tdh?profile=${encodeURIComponent(result?.profile ?? profile)}&limit=5000`;
+
+  const exportJson = () => {
+    if (result) downloadExport(`${exportSlug}-mytdh.json`, `${JSON.stringify(result, null, 2)}\n`, "application/json");
+  };
+
+  const exportCsv = () => {
+    if (!result?.collectors) return;
+    const header = ["rank", "collector_name", "address", "artist_tdh", "works_held", "raw_work_days", "earliest_current_hold", "latest_current_hold", "points_per_day"];
+    const rows = result.collectors.map((collector) => [collector.rank, collector.name, collector.address, collector.tdh, collector.works_held, collector.raw_work_days, collector.first_acquired_at, collector.last_acquired_at, collector.daily_rate]);
+    downloadExport(`${exportSlug}-mytdh.csv`, `${[header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n")}\n`, "text/csv;charset=utf-8");
+  };
+
+  const copyApiUrl = async () => {
+    await navigator.clipboard.writeText(apiUrl);
+    setApiCopied(true);
+    window.setTimeout(() => setApiCopied(false), 1800);
+  };
 
   return <main className="calculate-page">
+    <Celebration run={celebrationRun} />
     <header className="calculate-header">
       <a href="/">myTDH</a>
       <span>RASTER COLLECTOR REGISTER</span>
     </header>
     <section className="calculate-intro">
       <div className="calculate-stage">
-        <h1>ENTER YOUR<br />RASTER URL.</h1>
+        <h1>ENTER YOUR<br />RASTER URL</h1>
         <form onSubmit={(event) => { void calculate(event); }}>
           <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
           <div className="profile-entry">
             <input id="raster-profile" type="url" inputMode="url" placeholder="https://www.raster.art/artist/casey-reas" value={profile} onChange={(event) => setProfile(event.target.value)} required />
-            <button type="submit" disabled={loading}>{loading ? "READING" : "BUILD REGISTER"}</button>
+            <button type="submit" disabled={loading}>{loading ? "MAPPING" : "MAP YOUR MOST LOYAL COLLECTORS"}</button>
           </div>
         </form>
-        <p className="coverage-note">CURRENT COVERAGE / VERIFIED RASTER-INDEXED OEUVRES</p>
       </div>
     </section>
     {result ? <section className="profile-result" aria-live="polite">
@@ -376,6 +477,11 @@ function CalculatePage() {
           <div><dt>REFERENCE EDITION</dt><dd>{number.format(result.corpus.reference_artwork_size)}</dd></div>
           <div><dt>SNAPSHOT</dt><dd>{result.snapshotAt?.slice(0, 10)}</dd></div>
         </dl>
+        <div className="register-actions" aria-label="Export collector register">
+          <button type="button" onClick={exportJson}>EXPORT JSON</button>
+          <button type="button" onClick={exportCsv}>EXPORT CSV</button>
+          <button type="button" onClick={() => { void copyApiUrl(); }}>{apiCopied ? "API URL COPIED" : "COPY API URL"}</button>
+        </div>
         <div className="collector-controls">
           <label htmlFor="collector-query">SEARCH THE ENTIRE COLLECTOR CORPUS</label>
           <input id="collector-query" type="search" placeholder="COLLECTOR OR WALLET" value={collectorQuery} onChange={(event) => { setCollectorQuery(event.target.value); setCollectorPage(0); }} />
@@ -507,8 +613,10 @@ export default function App() {
           >H</span>
         </h1>
         <div className="hero-foot">
-          <p><a href="/methodology">A transparent holding-duration signal for any digital artist.</a></p>
-          <a className="primary-link" href="/calculate">Calculate yours</a>
+          <p>
+            <a href="/methodology">A transparent holding-duration signal for any digital artist.</a>
+            <a href="/calculate">Calculate yours</a>
+          </p>
         </div>
       </section>
 

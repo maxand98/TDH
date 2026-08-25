@@ -15,12 +15,17 @@ describe("visual system guardrails", () => {
   });
 
   it("keeps artwork clipped inside the interactive hero letters", () => {
-    expect(stylesheet).toContain(".hero-letter { -webkit-background-clip:text; background-clip:text;");
-    expect(stylesheet).toContain("display:inline-block; line-height:1;");
-    expect(stylesheet).toContain("margin:-.08em 0 -.24em; padding:.08em 0 .24em;");
-    expect(stylesheet).toContain('.hero-letter-y { background-image:url("/autoglyph-hover.svg"); background-size:100% 100%; }');
-    expect(stylesheet).toContain("-webkit-text-stroke:0 transparent;");
+    expect(stylesheet).toContain("-webkit-mask-size:100% 100%; mask-size:100% 100%;");
+    expect(stylesheet).toContain('.hero-letter-y { width:.456em; -webkit-mask-image:url("/glyph-y.svg");');
+    expect(stylesheet).toContain('.hero-letter-y:hover,.hero-letter-y:focus-visible { background-image:url("/autoglyph-hover.svg"); }');
     expect(appSource).not.toContain("hero-art");
+  });
+
+  it("offers durable register exports and a celebratory completion state", () => {
+    expect(appSource).toContain("EXPORT JSON");
+    expect(appSource).toContain("EXPORT CSV");
+    expect(appSource).toContain("COPY API URL");
+    expect(appSource).toContain('className="celebration"');
   });
 
   it("keeps the public page to the hero and attribution footer", () => {
