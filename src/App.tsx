@@ -119,15 +119,6 @@ export default function App() {
 
   return (
     <main>
-      <header className="masthead">
-        <a className="wordmark" href="#top" aria-label="myTDH home">myTDH<span>®</span></a>
-        <nav aria-label="Primary navigation">
-          <a href="#method">( Method )</a><a href="#lab">( Calculate )</a>
-          <a href="https://github.com/maxand98/TDH">( Source )</a>
-        </nav>
-        <p className="edition">PUBLIC LAB / 001</p>
-      </header>
-
       <section className="hero" id="top">
         <div className="hero-meta hero-meta-left"><span>Measure</span><strong>Total Days Held</strong></div>
         <div className="hero-meta hero-meta-right"><span>Signal</span><strong>Time × Breadth</strong></div>
