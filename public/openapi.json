@@ -35,6 +35,29 @@
         "responses": { "200": { "description": "Published collector register" } }
       }
     },
+    "/api/raster-collector-jobs": {
+      "post": {
+        "operationId": "startArtistCollectorRegister",
+        "summary": "Start or reuse a background Raster collector-register job",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["profile"], "properties": { "profile": { "type": "string", "format": "uri" } } } } }
+        },
+        "responses": {
+          "200": { "description": "A cached register is ready" },
+          "202": { "description": "The register is queued or running" },
+          "400": { "description": "Invalid Raster profile" }
+        }
+      }
+    },
+    "/api/raster-collector-jobs/{id}": {
+      "get": {
+        "operationId": "getArtistCollectorRegisterJob",
+        "summary": "Read background register progress",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Current job state and progress" }, "404": { "description": "Job not found" } }
+      }
+    },
     "/api/calculate": {
       "post": {
         "operationId": "calculateArtistTdhFromDeclaredData",

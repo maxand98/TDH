@@ -17,6 +17,8 @@ describe("agent discovery surfaces", () => {
     expect(openapi.openapi).toBe("3.1.0");
     expect(openapi.paths).toHaveProperty("/api/raster-collector-tdh");
     expect(openapi.paths).toHaveProperty("/api/raster-tdh");
+    expect(openapi.paths).toHaveProperty("/api/raster-collector-jobs");
+    expect(openapi.paths).toHaveProperty("/api/raster-collector-jobs/{id}");
     expect(openapi.paths).toHaveProperty("/api/calculate");
   });
 
@@ -29,6 +31,6 @@ describe("agent discovery surfaces", () => {
   it("advertises a Streamable HTTP MCP server and its tools", () => {
     expect(manifest.endpoint).toBe("https://mytdh.xyz/mcp");
     expect(manifest.transport).toBe("streamable-http");
-    expect(manifest.tools?.map((tool) => tool.name)).toEqual(["list_artist_collectors", "get_methodology"]);
+    expect(manifest.tools?.map((tool) => tool.name)).toEqual(["list_artist_collectors", "start_artist_register", "get_artist_register_job", "get_methodology"]);
   });
 });

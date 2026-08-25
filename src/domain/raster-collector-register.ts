@@ -1,6 +1,7 @@
 import { rasterArtistSlug } from "./raster-profile";
 
 export type AssetFetcher = { fetch(request: Request): Promise<Response> };
+export type RegisterStore = { get<T>(key: string, type: "json"): Promise<T | null> };
 
 export const RASTER_COLLECTOR_TDH_METHODOLOGY = "raster-artist-abtdh/1";
 
@@ -28,7 +29,7 @@ type Registry = {
   artists: RegistryEntry[];
 };
 
-type CollectorSnapshot = {
+export type CollectorSnapshot = {
   schema: string;
   snapshot_at: string;
   status: string;
@@ -97,6 +98,7 @@ export async function lookupRasterCollectorTdh(
   assets: AssetFetcher,
   origin: string,
   options: { offset?: number; limit?: number; query?: string } = {},
+  store?: RegisterStore,
 ): Promise<RasterCollectorTdhResult> {
   const rasterSlug = rasterArtistSlug(profileInput);
   const registry = parseRegistry(await assetJson(assets, origin, "/data/raster-collector-tdh/index.json"));
@@ -107,14 +109,19 @@ export async function lookupRasterCollectorTdh(
     slug: rasterSlug,
     profile: `https://www.raster.art/artist/${rasterSlug}`,
   };
-  if (!entry) {
-    return {
-      ...base,
-      message: "This Raster profile does not yet have a published collector holding-time register.",
-    };
+  let snapshot: CollectorSnapshot;
+  if (entry) {
+    snapshot = parseSnapshot(await assetJson(assets, origin, `/data/raster-collector-tdh/${entry.slug}.json`));
+  } else {
+    const stored = store ? await store.get<CollectorSnapshot>(`registers/${rasterSlug}/latest.json`, "json") : null;
+    if (!stored) {
+      return {
+        ...base,
+        message: "This Raster profile does not yet have a generated collector holding-time register.",
+      };
+    }
+    snapshot = parseSnapshot(stored);
   }
-
-  const snapshot = parseSnapshot(await assetJson(assets, origin, `/data/raster-collector-tdh/${entry.slug}.json`));
   const query = options.query?.trim().toLowerCase() ?? "";
   const matching = query
     ? snapshot.collectors.filter((collector) => collector.name.toLowerCase().includes(query) || collector.address.toLowerCase().includes(query))

@@ -1,9 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
-import { lookupRasterCollectorTdh, RASTER_COLLECTOR_TDH_METHODOLOGY, type AssetFetcher } from "../src/domain/raster-collector-register";
+import { RASTER_COLLECTOR_TDH_METHODOLOGY } from "../src/domain/raster-collector-register";
 
-const publicAssets: AssetFetcher = { fetch: (request) => fetch(request) };
+async function publicJson(path: string, init?: RequestInit): Promise<string> {
+  const response = await fetch(new URL(path, "https://mytdh.xyz"), init);
+  const text = await response.text();
+  if (!response.ok) throw new Error(text);
+  return text;
+}
 
 function createServer() {
   const server = new McpServer({
@@ -30,9 +35,14 @@ function createServer() {
     },
     async ({ profile, offset, limit, query }) => {
       try {
-        const result = await lookupRasterCollectorTdh(profile, publicAssets, "https://mytdh.xyz", { offset, limit, query });
+        const url = new URL("/api/raster-collector-tdh", "https://mytdh.xyz");
+        url.searchParams.set("profile", profile);
+        url.searchParams.set("offset", String(offset));
+        url.searchParams.set("limit", String(limit));
+        if (query) url.searchParams.set("query", query);
+        const result = await publicJson(url.pathname + url.search);
         return {
-          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text" as const, text: result }],
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to read the artist collector register";
@@ -40,6 +50,56 @@ function createServer() {
           content: [{ type: "text" as const, text: message }],
           isError: true,
         };
+      }
+    },
+  );
+
+  server.registerTool(
+    "start_artist_register",
+    {
+      description: "Start an idempotent background job that generates and caches a collector holding-time register for any public Raster artist profile.",
+      inputSchema: z.object({
+        profile: z.string().describe("A Raster artist profile URL, such as https://www.raster.art/artist/joe-pease"),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async ({ profile }) => {
+      try {
+        const result = await publicJson("/api/raster-collector-jobs", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ profile }),
+        });
+        return { content: [{ type: "text" as const, text: result }] };
+      } catch (error) {
+        return { content: [{ type: "text" as const, text: error instanceof Error ? error.message : "Unable to start the register" }], isError: true };
+      }
+    },
+  );
+
+  server.registerTool(
+    "get_artist_register_job",
+    {
+      description: "Read the progress or completion state of a myTDH background register job.",
+      inputSchema: z.object({ id: z.string().regex(/^[a-z0-9-]+$/).describe("The job id returned by start_artist_register") }),
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ id }) => {
+      try {
+        const result = await publicJson(`/api/raster-collector-jobs/${id}`);
+        return { content: [{ type: "text" as const, text: result }] };
+      } catch (error) {
+        return { content: [{ type: "text" as const, text: error instanceof Error ? error.message : "Unable to read the register job" }], isError: true };
       }
     },
   );

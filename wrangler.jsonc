@@ -4,6 +4,10 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-08-25",
   "compatibility_flags": ["nodejs_compat"],
+  "limits": {
+    "cpu_ms": 300000,
+    "subrequests": 100000
+  },
   "routes": [
     {
       "pattern": "mytdh.xyz",
@@ -15,6 +19,22 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*", "/mcp"]
   },
+  "kv_namespaces": [
+    {
+      "binding": "REGISTERS",
+      "id": "398b01df8b244251a13f339ed62bdad6"
+    }
+  ],
+  "workflows": [
+    {
+      "binding": "RASTER_REGISTER",
+      "name": "mytdh-raster-register",
+      "class_name": "RasterRegisterWorkflow",
+      "limits": {
+        "steps": 25000
+      }
+    }
+  ],
   "observability": {
     "enabled": true,
     "logs": {

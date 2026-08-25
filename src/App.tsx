@@ -309,6 +309,21 @@ type RasterTdhResponse = {
   pagination?: { total: number };
 };
 
+type RasterRegisterJob = {
+  id?: string;
+  slug?: string;
+  state: "queued" | "running" | "complete" | "errored";
+  stage?: "queued" | "oeuvre" | "tokens" | "owners" | "collectors" | "calculating" | "complete" | "errored";
+  message?: string;
+  completed?: number;
+  total?: number | null;
+  updatedAt?: string;
+  jobUrl?: string;
+  resultUrl?: string;
+  cached?: boolean;
+  error?: string;
+};
+
 const number = new Intl.NumberFormat("en-AU");
 const COLLECTORS_PER_PAGE = 100;
 
@@ -397,22 +412,63 @@ function CalculatePage() {
   const [collectorPage, setCollectorPage] = useState(0);
   const [celebrationRun, setCelebrationRun] = useState(0);
   const [apiCopied, setApiCopied] = useState(false);
+  const [job, setJob] = useState<RasterRegisterJob | null>(null);
+  const calculationRun = useRef(0);
+
+  const loadRegister = async (resultUrl: string, run: number) => {
+    const response = await fetch(resultUrl);
+    const data = await response.json() as RasterTdhResponse;
+    if (run !== calculationRun.current) return;
+    setResult(data);
+    if (data.artist && data.collectors) setCelebrationRun((value) => value + 1);
+  };
+
+  const pollJob = async (initial: RasterRegisterJob, run: number) => {
+    let current = initial;
+    while (run === calculationRun.current && current.state !== "complete" && current.state !== "errored") {
+      await new Promise((resolve) => window.setTimeout(resolve, current.state === "queued" ? 1_500 : 2_500));
+      if (!current.jobUrl) throw new Error("The register job did not provide a status URL");
+      const response = await fetch(current.jobUrl);
+      current = await response.json() as RasterRegisterJob;
+      if (run !== calculationRun.current) return;
+      setJob(current);
+    }
+    if (run !== calculationRun.current) return;
+    if (current.state === "errored") throw new Error(current.error || "The collector register could not be completed");
+    if (!current.resultUrl) throw new Error("The completed register did not provide a result URL");
+    await loadRegister(current.resultUrl, run);
+  };
 
   const calculate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const run = calculationRun.current + 1;
+    calculationRun.current = run;
     setLoading(true);
     setResult(null);
+    setJob(null);
     setCollectorPage(0);
     setCollectorQuery("");
     try {
-      const response = await fetch(`/api/raster-collector-tdh?profile=${encodeURIComponent(profile)}&limit=5000`);
-      const data = await response.json() as RasterTdhResponse;
-      setResult(data);
-      if (data.artist && data.collectors) setCelebrationRun((run) => run + 1);
-    } catch {
-      setResult({ error: "Unable to reach the TDH service" });
+      const response = await fetch("/api/raster-collector-jobs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ profile }),
+      });
+      const data = await response.json() as RasterRegisterJob;
+      if (!response.ok || data.error) throw new Error(data.error || "Unable to start the collector map");
+      if (run !== calculationRun.current) return;
+      setJob(data);
+      if (data.state === "complete") {
+        if (!data.resultUrl) throw new Error("The cached register did not provide a result URL");
+        await loadRegister(data.resultUrl, run);
+      } else {
+        await pollJob(data, run);
+      }
+    } catch (error) {
+      if (run !== calculationRun.current) return;
+      setResult({ error: error instanceof Error ? error.message : "Unable to reach the TDH service" });
     } finally {
-      setLoading(false);
+      if (run === calculationRun.current) setLoading(false);
     }
   };
 
@@ -445,8 +501,7 @@ function CalculatePage() {
   return <main className="calculate-page">
     <Celebration run={celebrationRun} />
     <header className="calculate-header">
-      <a href="/">myTDH</a>
-      <span>RASTER COLLECTOR REGISTER</span>
+      <a className="back-chevron" href="/" aria-label="Back to myTDH home">‹</a>
     </header>
     <section className="calculate-intro">
       <div className="calculate-stage">
@@ -458,6 +513,14 @@ function CalculatePage() {
             <button type="submit" disabled={loading}>{loading ? "MAPPING" : "MAP YOUR MOST LOYAL COLLECTORS"}</button>
           </div>
         </form>
+        {loading && job ? <div className="register-loading" role="status" aria-live="polite">
+          <div className="register-loading-orbit" aria-hidden="true"><i /><i /><i /></div>
+          <div>
+            <strong>{job.message ?? "Mapping the Raster oeuvre"}</strong>
+            <p>{job.total ? `${number.format(job.completed ?? 0)} / ${number.format(job.total)}` : "THIS MAY TAKE A FEW MINUTES"}</p>
+            <div className="register-progress"><span style={{ width: job.total ? `${Math.max(2, Math.min(100, ((job.completed ?? 0) / job.total) * 100))}%` : "18%" }} /></div>
+          </div>
+        </div> : null}
       </div>
     </section>
     {result ? <section className="profile-result" aria-live="polite">
@@ -523,7 +586,7 @@ function SiteFooter() {
 function MethodologyPage() {
   return <main className="methodology-page">
     <header className="calculate-header">
-      <a href="/">myTDH</a>
+      <a className="back-chevron" href="/" aria-label="Back to myTDH home">‹</a>
       <a href="/calculate">Calculate yours</a>
     </header>
     <article className="methodology-copy">

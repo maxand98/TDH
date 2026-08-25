@@ -22,7 +22,16 @@ GET https://mytdh.xyz/api/raster-collector-tdh?profile={URL_ENCODED_RASTER_ARTIS
 
 Example profile: https://www.raster.art/artist/casey-reas
 
-The response contains a paginated collector register. A 404 with covered=false means no reproducible register is currently published for that Raster profile. Never infer a zero score from an uncovered profile.
+The response contains a paginated collector register. A 404 with covered=false means no register has been generated yet. Never infer a zero score from an uncovered profile.
+
+## Generate a missing register
+
+POST https://mytdh.xyz/api/raster-collector-jobs
+Content-Type: application/json
+
+{"profile":"https://www.raster.art/artist/joe-pease"}
+
+The response is either a cached completed register or a durable background job. Poll its `jobUrl` until `state` is `complete`, then fetch `resultUrl`. Jobs are idempotent for the artist and snapshot day and may take several minutes.
 
 ## Interpretation
 

@@ -10,6 +10,14 @@
       "description": "List a paginated artist-specific abTDH-equivalent collector register from a Raster profile URL."
     },
     {
+      "name": "start_artist_register",
+      "description": "Start an idempotent background calculation for a public Raster artist profile."
+    },
+    {
+      "name": "get_artist_register_job",
+      "description": "Read live progress and the result URL for a register job."
+    },
+    {
       "name": "get_methodology",
       "description": "Return the methodology, coverage rule, corpus, and excluded inputs."
     }
