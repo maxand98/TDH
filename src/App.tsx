@@ -164,36 +164,58 @@ function IdleScreensaver() {
   </div>;
 }
 
+type RasterCollector = {
+  name: string;
+  address: string;
+  works_held: number;
+  raw_work_days: number;
+  first_acquired_at: string | null;
+  last_acquired_at: string | null;
+  tdh: number;
+  daily_rate: number;
+  rank: number;
+};
+
 type RasterTdhResponse = {
   covered?: boolean;
-  corpus?: string;
   message?: string;
   snapshotAt?: string;
   error?: string;
+  metric?: { id: string; label: string };
   artist?: {
-    artist: string;
-    otdh: number;
-    collector_identities: number;
-    projects: number;
-    current_works: number;
-    raw_collector_days: number;
-    rank: number;
+    name: string;
+    raster_url: string;
   };
+  corpus?: {
+    name: string;
+    artworks: number;
+    tokens: number;
+    eligible_collector_addresses: number;
+    reference_artwork_size: number;
+  };
+  method?: { definition: string; edition_weight_formula: string; exclusions: string };
+  collectors?: RasterCollector[];
+  pagination?: { total: number };
 };
 
 const number = new Intl.NumberFormat("en-AU");
+const COLLECTORS_PER_PAGE = 100;
 
 function CalculatePage() {
   const [profile, setProfile] = useState("");
   const [result, setResult] = useState<RasterTdhResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [collectorQuery, setCollectorQuery] = useState("");
+  const [collectorPage, setCollectorPage] = useState(0);
 
   const calculate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setResult(null);
+    setCollectorPage(0);
+    setCollectorQuery("");
     try {
-      const response = await fetch(`/api/raster-tdh?profile=${encodeURIComponent(profile)}`);
+      const response = await fetch(`/api/raster-collector-tdh?profile=${encodeURIComponent(profile)}&limit=5000`);
       const data = await response.json() as RasterTdhResponse;
       setResult(data);
     } catch {
@@ -203,38 +225,73 @@ function CalculatePage() {
     }
   };
 
+  const collectors = (result?.collectors ?? []).filter((collector) => {
+    const query = collectorQuery.trim().toLowerCase();
+    return !query || collector.name.toLowerCase().includes(query) || collector.address.toLowerCase().includes(query);
+  });
+  const pageCount = Math.max(1, Math.ceil(collectors.length / COLLECTORS_PER_PAGE));
+  const visibleCollectors = collectors.slice(collectorPage * COLLECTORS_PER_PAGE, (collectorPage + 1) * COLLECTORS_PER_PAGE);
+
   return <main className="calculate-page">
     <header className="calculate-header">
       <a href="/">myTDH</a>
-      <span>RASTER PROFILE CALCULATOR</span>
+      <span>RASTER COLLECTOR REGISTER</span>
     </header>
-    <section className="calculate-stage">
-      <h1>PASTE YOUR<br />RASTER PROFILE.</h1>
-      <form onSubmit={(event) => { void calculate(event); }}>
-        <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
-        <div className="profile-entry">
-          <input id="raster-profile" type="url" inputMode="url" placeholder="https://www.raster.art/artist/casey-reas" value={profile} onChange={(event) => setProfile(event.target.value)} required />
-          <button type="submit" disabled={loading}>{loading ? "READING" : "CALCULATE"}</button>
-        </div>
-      </form>
-      <p className="coverage-note">CURRENT COVERAGE / AB[500] DECLARED CORPUS</p>
-      {result ? <div className="profile-result" aria-live="polite">
-        {result.artist ? <>
-          <div className="profile-score">
-            <span>{result.artist.artist}</span>
-            <strong>{number.format(result.artist.otdh)}</strong>
-            <small>ARTIST TDH</small>
+    <section className="calculate-intro">
+      <div className="calculate-stage">
+        <h1>ENTER YOUR<br />RASTER URL.</h1>
+        <form onSubmit={(event) => { void calculate(event); }}>
+          <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
+          <div className="profile-entry">
+            <input id="raster-profile" type="url" inputMode="url" placeholder="https://www.raster.art/artist/casey-reas" value={profile} onChange={(event) => setProfile(event.target.value)} required />
+            <button type="submit" disabled={loading}>{loading ? "READING" : "BUILD REGISTER"}</button>
           </div>
-          <dl>
-            <div><dt>COLLECTOR IDENTITIES</dt><dd>{number.format(result.artist.collector_identities)}</dd></div>
-            <div><dt>PROJECTS</dt><dd>{number.format(result.artist.projects)}</dd></div>
-            <div><dt>CURRENT WORKS</dt><dd>{number.format(result.artist.current_works)}</dd></div>
-            <div><dt>RAW COLLECTOR-DAYS</dt><dd>{number.format(result.artist.raw_collector_days)}</dd></div>
-          </dl>
-          <p>{result.corpus} / SNAPSHOT {result.snapshotAt?.slice(0, 10)}</p>
-        </> : <p className="profile-message">{result.error ?? result.message}</p>}
-      </div> : null}
+        </form>
+        <p className="coverage-note">CURRENT COVERAGE / VERIFIED RASTER-INDEXED OEUVRES</p>
+      </div>
     </section>
+    {result ? <section className="profile-result" aria-live="polite">
+      {result.artist && result.corpus && result.metric ? <>
+        <div className="register-title">
+          <div>
+            <h2>{result.artist.name}</h2>
+            <a href="/methodology">{result.metric.label} / ARTIST-SPECIFIC abTDH</a>
+          </div>
+          <strong>{number.format(result.corpus.eligible_collector_addresses)}</strong>
+          <span>ELIGIBLE COLLECTOR ADDRESSES</span>
+        </div>
+        <p className="register-explainer">Every current collector is shown. Each score adds uninterrupted days held across the artist’s Raster-indexed oeuvre, with smaller editions receiving proportionally more weight. This is an artist-specific equivalent of abTDH, not oTDH.</p>
+        <dl>
+          <div><dt>INDEXED ARTWORKS</dt><dd>{number.format(result.corpus.artworks)}</dd></div>
+          <div><dt>INDEXED TOKENS</dt><dd>{number.format(result.corpus.tokens)}</dd></div>
+          <div><dt>REFERENCE EDITION</dt><dd>{number.format(result.corpus.reference_artwork_size)}</dd></div>
+          <div><dt>SNAPSHOT</dt><dd>{result.snapshotAt?.slice(0, 10)}</dd></div>
+        </dl>
+        <div className="collector-controls">
+          <label htmlFor="collector-query">SEARCH THE ENTIRE COLLECTOR CORPUS</label>
+          <input id="collector-query" type="search" placeholder="COLLECTOR OR WALLET" value={collectorQuery} onChange={(event) => { setCollectorQuery(event.target.value); setCollectorPage(0); }} />
+        </div>
+        <div className="collector-table-wrap">
+          <table className="collector-table">
+            <thead><tr><th>RANK</th><th>COLLECTOR</th><th>{result.metric.label}</th><th>WORKS</th><th>EARLIEST CURRENT HOLD</th><th>POINTS / DAY</th></tr></thead>
+            <tbody>{visibleCollectors.map((collector) => <tr key={collector.address}>
+              <td>{number.format(collector.rank)}</td>
+              <td><b>{collector.name}</b><span>{collector.address}</span></td>
+              <td>{number.format(collector.tdh)}</td>
+              <td>{number.format(collector.works_held)}</td>
+              <td>{collector.first_acquired_at?.slice(0, 10) ?? "NOT RECORDED"}</td>
+              <td>{number.format(collector.daily_rate)}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+        <div className="collector-pagination">
+          <button type="button" disabled={collectorPage === 0} onClick={() => setCollectorPage((page) => Math.max(0, page - 1))}>PREVIOUS 100</button>
+          <p>PAGE {number.format(collectorPage + 1)} OF {number.format(pageCount)} / {number.format(collectors.length)} MATCHING COLLECTORS</p>
+          <button type="button" disabled={collectorPage + 1 >= pageCount} onClick={() => setCollectorPage((page) => Math.min(pageCount - 1, page + 1))}>NEXT 100</button>
+        </div>
+      </> : <p className="profile-message">{result.error ?? result.message}</p>}
+    </section> : null}
+    <SiteFooter />
   </main>;
 }
 
@@ -255,32 +312,31 @@ function MethodologyPage() {
       <a href="/calculate">Calculate yours</a>
     </header>
     <article className="methodology-copy">
-      <h1>HOW TDH<br />IS CALCULATED.</h1>
-      <p className="methodology-lede">TDH measures the duration and breadth of current independent collecting across an artist’s declared body of work. It is a holding-behaviour signal, not a judgment of artistic or financial value.</p>
+      <h1>HOW THE REGISTER<br />IS CALCULATED.</h1>
+      <p className="methodology-lede">The calculator creates an artist-specific equivalent of AB5D’s abTDH: a collector register built from uninterrupted holding time and edition-size weighting. It is not oTDH and it is not an artist score.</p>
 
       <section>
-        <h2>THE PROJECT SCORE</h2>
-        <p>For each project, the current uninterrupted holding time of every eligible work is measured in complete days. If one collector identity holds several works from that project, those holding times are averaged so that the identity contributes one observation.</p>
-        <p className="methodology-formula">project TDH = median identity hold days × log₂(1 + collector identities)</p>
-        <p>The median resists a few exceptionally old holdings. The logarithm rewards genuine collector breadth while reducing the effect of very large editions.</p>
+        <h2>EACH CURRENT WORK</h2>
+        <p>For every work still held at the snapshot, complete uninterrupted days are measured from Raster’s last-acquired timestamp. A disposal ends that interval; reacquisition begins a new one.</p>
+        <p className="methodology-formula">work contribution = complete days held × edition weight</p>
       </section>
 
       <section>
-        <h2>THE ARTIST SCORE</h2>
-        <p>All eligible project scores are added, then divided by the square root of the number of projects. This allows a sustained body of work to contribute without making prolific release schedules dominate the result.</p>
-        <p className="methodology-formula">artist TDH = sum of project TDH ÷ √ eligible projects</p>
+        <h2>EDITION WEIGHT</h2>
+        <p>The largest indexed artwork in the artist’s declared Raster oeuvre is the reference edition. Each artwork’s weight is the reference size divided by that artwork’s indexed edition size, rounded to two decimal places. This is the same supply-resistance principle used by abTDH, applied within one artist’s oeuvre.</p>
+        <p className="methodology-formula">edition weight = largest indexed edition ÷ artwork indexed edition</p>
       </section>
 
       <section>
-        <h2>WHAT COUNTS</h2>
-        <p>Only works still held at the declared snapshot count. A disposal ends the holding period; reacquisition begins a new one. Transfers between wallets belonging to one consolidated identity preserve the original acquisition date.</p>
-        <p>Artist-controlled wallets, treasuries, burn addresses and unresolved custody are excluded or explicitly flagged. Price, sales volume, floor price, reputation and social attention have no weight.</p>
+        <h2>THE COLLECTOR SCORE</h2>
+        <p>All weighted work contributions held by one current ownership address are added. The result is that collector’s artist-specific TDH. The register shows every eligible collector address, its current works, earliest current acquisition and points earned per additional day.</p>
+        <p className="methodology-formula">collector artist-TDH = Σ weighted current-work days</p>
       </section>
 
       <section>
-        <h2>COVERAGE</h2>
-        <p>The public Raster-profile calculator currently resolves artists represented in the declared AB[500] corpus. An artist outside that corpus is reported as uncovered, never as a zero score.</p>
-        <p>Every result identifies the formula as <code>artist-tdh/1</code>, names its corpus and gives its snapshot date, collector count, project count, work count and raw collector-days.</p>
+        <h2>BOUNDARIES</h2>
+        <p>The corpus is the artist’s verified Raster-indexed oeuvre. Raster-listed artist addresses and identified marketplace custody are excluded. Each ownership address is reported independently; a named Raster collector is shown where available.</p>
+        <p>Price, sales volume, floor price, reputation and artistic judgment have no input. Every result identifies the formula as <code>raster-artist-abtdh/1</code>, names the corpus and publishes the full collector register.</p>
       </section>
     </article>
     <SiteFooter />

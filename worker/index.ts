@@ -1,6 +1,6 @@
-import { ARTIST_TDH_METHODOLOGY, calculateArtistTdh } from "../src/domain/artist-tdh";
+import { calculateArtistTdh } from "../src/domain/artist-tdh";
 import { mcpHandler } from "./mcp";
-import { lookupRasterTdh } from "./tdh-data";
+import { lookupRasterCollectorTdh, RASTER_COLLECTOR_TDH_METHODOLOGY } from "../src/domain/raster-collector-register";
 
 const MAX_BODY_BYTES = 128 * 1024;
 
@@ -70,21 +70,25 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/api/health") {
-      return json({ ok: true, service: "mytdh", methodology: ARTIST_TDH_METHODOLOGY });
+      return json({ ok: true, service: "mytdh", methodology: RASTER_COLLECTOR_TDH_METHODOLOGY });
     }
 
     if (request.method === "GET" && url.pathname === "/api/methodology") {
       return json({
-        methodology: ARTIST_TDH_METHODOLOGY,
-        definition: "Duration and breadth of current independent collecting across a declared artist oeuvre.",
+        methodology: RASTER_COLLECTOR_TDH_METHODOLOGY,
+        definition: "An artist-specific adaptation of abTDH: uninterrupted days held per current work, weighted inversely by the indexed edition size, reported for every eligible collector address.",
         priceInputs: false,
       });
     }
 
-    if (request.method === "GET" && url.pathname === "/api/raster-tdh") {
+    if (request.method === "GET" && (url.pathname === "/api/raster-collector-tdh" || url.pathname === "/api/raster-tdh")) {
       try {
         const profile = url.searchParams.get("profile") ?? "";
-        const result = await lookupRasterTdh(profile);
+        const result = await lookupRasterCollectorTdh(profile, env.ASSETS, url.origin, {
+          offset: Number(url.searchParams.get("offset") ?? 0),
+          limit: Number(url.searchParams.get("limit") ?? 100),
+          query: url.searchParams.get("query") ?? undefined,
+        });
         return json(result, { status: result.covered ? 200 : 404 });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to read Raster profile";

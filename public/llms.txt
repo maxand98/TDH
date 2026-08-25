@@ -1,6 +1,6 @@
 # myTDH
 
-myTDH is a public, price-independent holding-duration signal for digital artists.
+myTDH publishes price-independent, artist-specific collector holding-time registers.
 
 ## Human interface
 
@@ -16,16 +16,18 @@ myTDH is a public, price-independent holding-duration signal for digital artists
 - Methodology: https://mytdh.xyz/api/methodology
 - Health: https://mytdh.xyz/api/health
 
-## Primary lookup
+## Primary collector register
 
-GET https://mytdh.xyz/api/raster-tdh?profile={URL_ENCODED_RASTER_ARTIST_PROFILE}
+GET https://mytdh.xyz/api/raster-collector-tdh?profile={URL_ENCODED_RASTER_ARTIST_PROFILE}&offset=0&limit=100
 
 Example profile: https://www.raster.art/artist/casey-reas
 
-The result always names its declared corpus. A 404 with covered=false means the Raster artist is valid but is not represented in the current AB[500] corpus. Never infer a zero score from an uncovered profile.
+The response contains a paginated collector register. A 404 with covered=false means no reproducible register is currently published for that Raster profile. Never infer a zero score from an uncovered profile.
 
 ## Interpretation
 
-- TDH measures current uninterrupted holding duration and independent collector breadth.
+- The primary score is an artist-specific adaptation of abTDH, not oTDH.
+- Each current work contributes uninterrupted days held, weighted inversely by its indexed edition size.
+- Results are reported per eligible collector address across the artist's verified Raster-indexed oeuvre.
 - It does not use price, sales volume, floor price, reputation, or artistic quality.
 - A result is meaningful only with its methodology, snapshot date, and corpus.

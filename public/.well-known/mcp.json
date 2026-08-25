@@ -1,13 +1,13 @@
 {
   "name": "myTDH",
-  "description": "Look up transparent artist Total Days Held results and inspect the public methodology.",
+  "description": "List transparent artist-specific collector holding-time registers and inspect the public methodology.",
   "endpoint": "https://mytdh.xyz/mcp",
   "transport": "streamable-http",
   "authentication": "none",
   "tools": [
     {
-      "name": "get_artist_tdh",
-      "description": "Look up artist TDH from a public Raster artist profile URL."
+      "name": "list_artist_collectors",
+      "description": "List a paginated artist-specific abTDH-equivalent collector register from a Raster profile URL."
     },
     {
       "name": "get_methodology",

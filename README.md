@@ -1,6 +1,6 @@
 # TDH
 
-An open web app that lets any digital artist calculate a transparent Total Days Held signal for their own oeuvre.
+An open web app that publishes an artist-specific, abTDH-equivalent collector holding-time register from a Raster profile.
 
 Working product name: **myTDH**
 
@@ -8,7 +8,7 @@ Production: **[mytdh.xyz](https://mytdh.xyz)**
 
 ## What it measures
 
-The first product is an artist-side TDH calculation: how long independent collector identities have continuously held the artist's currently held works, with controls for supply, duplicate ownership, self-holding, and prolific release schedules.
+The primary product is a collector-by-collector register: uninterrupted days held for every current eligible work, weighted inversely by indexed edition size and added for each collector address. It adapts the supply-resistance principle of AB5D's abTDH to one artist's Raster-indexed oeuvre. It is not oTDH.
 
 It is a holding-behaviour signal, not a price, sales, fame, quality, governance, or reputation score.
 
@@ -35,12 +35,12 @@ Current foundation implemented:
 - reacquisition resets and declared-identity internal transfer preservation;
 - artist, treasury, burn, and custody-address exclusions;
 - Cloudflare Worker health, methodology, and calculation endpoints;
-- Raster-profile calculator at `/calculate` backed by the declared AB[500] corpus;
+- Raster-profile collector register at `/calculate`, backed by published Raster-indexed oeuvre snapshots;
 - public CORS-enabled JSON API, OpenAPI document, `llms.txt`, and stateless MCP server;
 - Cloudflare deployment on the `mytdh.xyz` custom domain;
 - hand-worked fixtures and failure-state tests.
 
-Complete cross-chain Raster holding history is not yet available through a public Raster data endpoint. Raster profiles outside the current AB[500] corpus return an explicit uncovered result rather than a fabricated score.
+Raster profiles without a published reproducible collector snapshot return an explicit uncovered result rather than a fabricated score.
 
 - [Product specification](docs/product-spec.md)
 - [Methodology](docs/methodology.md)
@@ -77,7 +77,7 @@ Local API routes:
 
 - `GET /api/health`
 - `GET /api/methodology`
-- `GET /api/raster-tdh?profile={raster_artist_profile_url}`
+- `GET /api/raster-collector-tdh?profile={raster_artist_profile_url}&offset=0&limit=100`
 - `POST /api/calculate`
 - `POST /mcp` (Streamable HTTP)
 

@@ -1,97 +1,50 @@
 # Methodology
 
-## Terminology
+## Public measure
 
-Collector-side TDH normally sums the full days for which an identity has held works it still owns. This project transposes that holding-age principle to an artist's declared oeuvre.
+The Raster calculator publishes an artist-specific equivalent of AB5D's abTDH. It is a collector register, not an artist-level oTDH score. Its machine-readable identifier is `raster-artist-abtdh/1`.
 
-The repository uses `artist-tdh/1` as the provisional machine-readable methodology identifier. The final public label remains a product decision.
+The declared corpus is the artist's verified Raster-indexed oeuvre. Each current ownership address is reported independently, with a Raster collector name where available.
 
 ## Formula
 
-For an artist `a`:
-
-- `P(a)` is the set of eligible projects in the declared oeuvre.
-- `I(p)` is the set of eligible consolidated collector identities currently holding project `p`.
-- `d(i,p)` is the mean uninterrupted full days for the eligible copies of `p` currently held by identity `i`.
-- `n(p)` is the number of eligible collector identities currently holding `p`.
-
-Each project score is:
+For every currently held token or edition copy:
 
 ```text
-Q(p) = median over i in I(p) of d(i,p) * log2(1 + n(p))
+complete uninterrupted days = floor(snapshot time - last acquired time)
+edition weight = largest indexed artwork size / artwork indexed edition size
+work contribution = complete uninterrupted days x edition weight
 ```
 
-The artist result is:
+The edition weight is rounded to two decimals before multiplication. A collector's artist-specific TDH is the sum of the weighted work contributions currently held by that address:
 
 ```text
-artistTDH(a) = sum over p in P(a) of Q(p) / sqrt(|P(a)|)
+collector artist-TDH = sum of weighted current-work days
 ```
+
+The published `daily_rate` is the number of weighted points the collector earns for one additional uninterrupted day if the current holdings do not change.
 
 ## Required behaviours
 
-- Only current uninterrupted holding periods contribute.
-- Disposal ends a contribution; reacquisition starts a new period.
-- Transfers inside an explicitly consolidated identity preserve the acquisition date.
-- Multiple copies held by one identity are averaged into one project observation.
-- Artist-controlled wallets, treasuries, burns, and unresolved custody are excluded or clearly flagged.
-- Complete days use a declared UTC snapshot boundary.
-- Price and transaction value have zero weight.
-- Calculate at full precision and round published numeric components to six decimal places only after aggregation.
+- Only works still held at the declared snapshot contribute.
+- Disposal ends a holding interval; reacquisition starts a new one.
+- Edition size resists the domination of very large series.
+- Raster-listed artist addresses and identified marketplace custody are excluded.
+- Price, transaction value, floor price, sales volume, reputation and artistic judgment have zero weight.
 - Every formula change creates a new methodology version.
 
-## Required published components
+## Required published evidence
 
-A score is incomplete unless published with:
+Every register publishes:
 
 - methodology and schema version;
-- snapshot timestamp and source block boundary;
-- declared corpus or oeuvre manifest hash;
-- raw current collector-days;
-- independent collector identities;
-- eligible projects and works;
-- median project holding duration;
-- chain and indexing coverage;
-- exclusions and unresolved custody count;
-- per-project component scores.
+- snapshot timestamp;
+- artist and Raster profile;
+- indexed artwork and token counts;
+- reference edition size;
+- chain coverage;
+- exclusion policy;
+- the complete ranked collector-address corpus;
+- current works, raw work-days, weighted TDH, daily rate and current acquisition boundaries for each collector.
 
-## Snapshot schema sketch
-
-```json
-{
-  "schema": "mytdh-snapshot/1",
-  "methodology": "artist-tdh/1",
-  "artist_id": "example-artist",
-  "snapshot_at": "2026-08-25T00:00:00Z",
-  "source_block": 0,
-  "manifest_sha256": "...",
-  "tdh": 0,
-  "raw_collector_days": 0,
-  "collector_identities": 0,
-  "eligible_projects": 0,
-  "eligible_works": 0,
-  "median_project_hold_days": 0,
-  "coverage": {
-    "chains": ["ethereum"],
-    "unresolved_custody": 0,
-    "complete": true
-  },
-  "projects": []
-}
-```
-
-Illustrative values are not real artist results.
-
-## Validation fixtures
-
-Before production, fixtures must cover:
-
-- mint directly to current owner;
-- transfer and reacquisition;
-- internal transfer within a consolidated identity;
-- one identity holding duplicate copies;
-- ERC-1155 quantity changes;
-- burn, treasury, escrow, and bridge addresses;
-- paginated history ending exactly at a boundary;
-- events after the snapshot block;
-- chain reorganisation/finality boundary;
-- incomplete history that returns `incomplete`, never a partial score.
+An uncovered Raster profile is reported as uncovered, never as a zero score.
