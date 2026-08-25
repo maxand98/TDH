@@ -135,7 +135,7 @@ textarea:focus { outline:2px solid var(--acid); outline-offset:2px; }
 .register-title a { font-family:"IBM Plex Mono",monospace; font-size:1.125rem; font-weight:500; text-transform:uppercase; }
 .register-title strong { font-size:clamp(5rem,12vw,12rem); letter-spacing:-.08em; line-height:.86; }
 .register-title>span { font-family:"IBM Plex Mono",monospace; font-size:var(--text-ui); grid-column:2; padding-top:.75rem; text-align:right; }
-.register-explainer { font-size:clamp(1.5rem,2.6vw,2.6rem); line-height:1.1; margin:clamp(4rem,7vw,7rem) 0; max-width:35ch; }
+.register-explainer { font-size:clamp(1.5rem,2.6vw,2.6rem); line-height:1.1; margin:clamp(4rem,7vw,7rem) 0; max-width:none; width:100%; }
 .profile-result dl { border-bottom:1px solid rgba(255,255,255,.36); border-top:1px solid rgba(255,255,255,.36); display:grid; grid-template-columns:repeat(4,1fr); margin:3rem 0 1rem; }
 .profile-result dl div { border-left:1px solid rgba(255,255,255,.24); display:block; padding:1rem; }
 .profile-result dl div:first-child { border-left:0; }
