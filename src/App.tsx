@@ -4,6 +4,13 @@ import { DEMO_INPUT } from "./demo";
 
 const formatter = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 2 });
 const metric = (value: number) => formatter.format(value);
+const IDLE_DELAY_MS = 7_000;
+const FALLBACK_SCREENSAVER_IMAGES = [
+  "/fidenza-hover.webp",
+  "/ringers-hover.webp",
+  "/fragments-hover.webp",
+  "/reas-hover.webp",
+];
 
 const MAXAND98_FACES = [
   { family: "'Monoton', cursive", scale: ".72", spacing: ".02em" },
@@ -107,9 +114,52 @@ function Maxand98Wordmark() {
   </a>;
 }
 
+function IdleScreensaver() {
+  const [images, setImages] = useState(FALLBACK_SCREENSAVER_IMAGES);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("https://ab5d.xyz/api/holdings")
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error(String(response.status))))
+      .then((data: { holdings?: Array<{ image?: unknown }> }) => {
+        if (cancelled) return;
+        const collectionImages = (data.holdings ?? [])
+          .map((holding) => holding.image)
+          .filter((image): image is string => typeof image === "string" && image.startsWith("https://"));
+        if (collectionImages.length) setImages(collectionImages);
+      })
+      .catch(() => { /* Local collection works remain available as a resilient fallback. */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let timer = 0;
+    const arm = () => {
+      window.clearTimeout(timer);
+      setActiveImage(null);
+      timer = window.setTimeout(() => {
+        const next = images[Math.floor(Math.random() * images.length)];
+        if (next) setActiveImage(next);
+      }, IDLE_DELAY_MS);
+    };
+    const events: Array<keyof WindowEventMap> = ["pointermove", "pointerdown", "keydown", "scroll", "touchstart"];
+    events.forEach((eventName) => window.addEventListener(eventName, arm, { passive: true }));
+    arm();
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((eventName) => window.removeEventListener(eventName, arm));
+    };
+  }, [images]);
+
+  return <div className={`screensaver${activeImage ? " is-active" : ""}`} aria-hidden="true">
+    {activeImage ? <img src={activeImage} alt="" /> : null}
+  </div>;
+}
+
 export default function App() {
   const [source, setSource] = useState(() => JSON.stringify(DEMO_INPUT, null, 2));
-  const [heroArtwork, setHeroArtwork] = useState<"fidenza" | "autoglyph" | "ringers" | "fragments" | "reas" | null>(null);
   const calculation = useMemo(() => {
     try {
       return { result: calculateArtistTdh(JSON.parse(source) as unknown), error: null };
@@ -134,62 +184,42 @@ export default function App() {
     event.currentTarget.style.removeProperty("--letter-y");
     event.currentTarget.style.removeProperty("--letter-rx");
     event.currentTarget.style.removeProperty("--letter-ry");
-    setHeroArtwork(null);
   };
 
   return (
     <main>
-      <section className={`hero${heroArtwork ? ` is-${heroArtwork}` : ""}`} id="top">
-        <div className="hero-art hero-art-fidenza" aria-hidden="true" />
-        <div className="hero-art hero-art-autoglyph" aria-hidden="true" />
-        <div className="hero-art hero-art-ringers" aria-hidden="true" />
-        <div className="hero-art hero-art-fragments" aria-hidden="true" />
-        <div className="hero-art hero-art-reas" aria-hidden="true" />
+      <IdleScreensaver />
+      <section className="hero" id="top">
         <h1 className="hero-title" aria-label="my Total Days Held">
           <span
             className="hero-letter hero-letter-m"
             tabIndex={0}
-            onPointerEnter={() => setHeroArtwork("fidenza")}
             onPointerMove={moveHeroLetter}
             onPointerLeave={restHeroLetter}
-            onFocus={() => setHeroArtwork("fidenza")}
-            onBlur={() => setHeroArtwork(null)}
           >m</span>
           <span
             className="hero-letter hero-letter-y"
             tabIndex={0}
-            onPointerEnter={() => setHeroArtwork("autoglyph")}
             onPointerMove={moveHeroLetter}
             onPointerLeave={restHeroLetter}
-            onFocus={() => setHeroArtwork("autoglyph")}
-            onBlur={() => setHeroArtwork(null)}
           >y</span>
           <span
             className="hero-letter hero-letter-t"
             tabIndex={0}
-            onPointerEnter={() => setHeroArtwork("ringers")}
             onPointerMove={moveHeroLetter}
             onPointerLeave={restHeroLetter}
-            onFocus={() => setHeroArtwork("ringers")}
-            onBlur={() => setHeroArtwork(null)}
           >T</span>
           <span
             className="hero-letter hero-letter-d"
             tabIndex={0}
-            onPointerEnter={() => setHeroArtwork("fragments")}
             onPointerMove={moveHeroLetter}
             onPointerLeave={restHeroLetter}
-            onFocus={() => setHeroArtwork("fragments")}
-            onBlur={() => setHeroArtwork(null)}
           >D</span>
           <span
             className="hero-letter hero-letter-h"
             tabIndex={0}
-            onPointerEnter={() => setHeroArtwork("reas")}
             onPointerMove={moveHeroLetter}
             onPointerLeave={restHeroLetter}
-            onFocus={() => setHeroArtwork("reas")}
-            onBlur={() => setHeroArtwork(null)}
           >H</span>
         </h1>
         <div className="hero-foot">

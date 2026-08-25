@@ -39,9 +39,9 @@ The CSS tokens are:
 - `myTDH` spans nearly the full viewport width, with each letter kept as a distinct interactive form and a visible optical gap between neighbours.
 - The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome.
 - The main wordmark uses the heaviest display weight, reinforced by a restrained white stroke.
-- Each letter owns one artwork reveal: `m` / Fidenza, `y` / Autoglyph, `T` / Ringers, `D` / Fragments, and `H` / Reas. Hover or keyboard focus transitions the full hero background to that artwork.
+- Each letter owns one artwork reveal: `m` / Fidenza, `y` / Autoglyph, `T` / Ringers, `D` / Fragments, and `H` / Reas. Hover or keyboard focus reveals that artwork only inside the letterform; the cosmic hero behind it never changes.
 - Pointer movement may shift and tilt only the active letter. The movement stays restrained and returns cleanly to rest when the pointer leaves.
-- Light artwork states switch the wordmark and supporting copy to near-black; dark artwork states retain white. Contrast must remain readable throughout every transition.
+- Non-active letters and supporting copy remain white and unchanged throughout every letter interaction.
 - Cosmic motion combines visible photographic drift with moving blue and copper luminosity. It must never compete with the wordmark or impair reading.
 - All motion stops when the visitor requests reduced motion.
 - Navigation, metadata, descriptive copy, and the calculate control remain at least 14px and maintain strong contrast over the image.
@@ -52,6 +52,14 @@ The CSS tokens are:
 - The signature field uses maxand98 blue (`#0a30e6`) and links to `maxand98.com`.
 - Every release carries the explicit statement `CC0 · NO RIGHTS RESERVED`, linked to CC0 1.0 Universal.
 - Reduced-motion visitors see the settled white wordmark with no font roll or light sweep.
+
+## Idle field
+
+- After seven seconds without pointer, keyboard, scroll, or touch input, a full-viewport black idle field appears.
+- Each activation selects one random work from the live AB5D Art Blocks holdings feed. The bundled hero works provide a local fallback if that feed is unavailable.
+- The artwork occupies a large left-aligned field with deliberate black negative space on wide screens; narrow screens use the full viewport.
+- Any interaction dismisses the idle field immediately and restarts the timer.
+- The idle field does not activate when reduced motion is requested.
 
 ## Prohibited patterns
 

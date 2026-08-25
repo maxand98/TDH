@@ -13,4 +13,14 @@ describe("visual system guardrails", () => {
     const remSizes = [...stylesheet.matchAll(/font-size:\s*(\d*\.?\d+)rem/g)].map((match) => Number(match[1]));
     expect(remSizes.filter((size) => size < 0.875)).toEqual([]);
   });
+
+  it("keeps artwork clipped inside the interactive hero letters", () => {
+    expect(stylesheet).toContain(".hero-letter { -webkit-background-clip:text; background-clip:text;");
+    expect(appSource).not.toContain("hero-art");
+  });
+
+  it("uses the live AB5D collection for the idle field", () => {
+    expect(appSource).toContain("https://ab5d.xyz/api/holdings");
+    expect(appSource).toContain("const IDLE_DELAY_MS = 7_000");
+  });
 });
