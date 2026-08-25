@@ -28,7 +28,17 @@ Wallet connection is not required for an exploratory calculation. A signed claim
 
 ## Repository status
 
-This repository currently contains the product, methodology, architecture, and delivery plan. It does not yet contain a deployed application.
+Phase 0/1 foundation implemented:
+
+- deterministic `artist-tdh/1` calculator;
+- ERC-721 current-ownership reconstruction;
+- reacquisition resets and declared-identity internal transfer preservation;
+- artist, treasury, burn, and custody-address exclusions;
+- Cloudflare Worker health, methodology, and calculation endpoints;
+- interactive methodology lab;
+- hand-worked fixtures and failure-state tests.
+
+Chain discovery and production backfill are not yet connected, and the application has not yet been deployed.
 
 - [Product specification](docs/product-spec.md)
 - [Methodology](docs/methodology.md)
@@ -43,6 +53,27 @@ This repository currently contains the product, methodology, architecture, and d
 - Cloudflare Queues for bounded asynchronous indexing and calculation work
 - Cron Trigger for refreshes of published profiles
 - Ethereum adapter first; EVM, Tezos, and other chains behind a common adapter contract later
+
+## Local development
+
+```bash
+npm install
+npm run types:worker
+npm run dev
+```
+
+Validation:
+
+```bash
+npm run check
+npm run worker:startup
+```
+
+Local API routes:
+
+- `GET /api/health`
+- `GET /api/methodology`
+- `POST /api/calculate`
 
 ## Principles
 

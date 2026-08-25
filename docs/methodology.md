@@ -36,6 +36,7 @@ artistTDH(a) = sum over p in P(a) of Q(p) / sqrt(|P(a)|)
 - Artist-controlled wallets, treasuries, burns, and unresolved custody are excluded or clearly flagged.
 - Complete days use a declared UTC snapshot boundary.
 - Price and transaction value have zero weight.
+- Calculate at full precision and round published numeric components to six decimal places only after aggregation.
 - Every formula change creates a new methodology version.
 
 ## Required published components

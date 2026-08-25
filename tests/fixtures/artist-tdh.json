@@ -1,0 +1,24 @@
+{
+  "artistId": "fixture-artist",
+  "snapshotAt": "2026-08-25T00:00:00.000Z",
+  "projects": [
+    {
+      "id": "one",
+      "label": "One",
+      "holdings": [
+        { "tokenId": "1", "identityId": "a", "acquiredAt": "2026-08-15T00:00:00.000Z" },
+        { "tokenId": "2", "identityId": "b", "acquiredAt": "2026-08-05T00:00:00.000Z" },
+        { "tokenId": "3", "identityId": "c", "acquiredAt": "2026-07-26T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "two",
+      "label": "Two",
+      "holdings": [
+        { "tokenId": "1", "identityId": "a", "acquiredAt": "2026-08-05T00:00:00.000Z" },
+        { "tokenId": "2", "identityId": "a", "acquiredAt": "2026-07-26T00:00:00.000Z" },
+        { "tokenId": "3", "identityId": "d", "acquiredAt": "2026-08-15T00:00:00.000Z" }
+      ]
+    }
+  ]
+}
