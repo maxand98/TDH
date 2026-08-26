@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 const IDLE_DELAY_MS = 5_000;
 const SCREENSAVER_TRAIL_SPACING_PX = 1.25;
+const CALCULATE_DODGE_LIMIT = 3;
 const FALLBACK_SCREENSAVER_IMAGES = [
   "/fidenza-hover.webp",
   "/ringers-hover.webp",
@@ -610,6 +611,75 @@ function SiteFooter() {
   </footer>;
 }
 
+function DodgeCalculateLink() {
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const dodgeCountRef = useRef(0);
+  const usedPositionsRef = useRef<number[]>([]);
+  const lastPointerTypeRef = useRef("");
+  const [dodgeCount, setDodgeCount] = useState(0);
+
+  const dodge = (event: React.PointerEvent<HTMLAnchorElement>) => {
+    lastPointerTypeRef.current = event.pointerType;
+    if (event.pointerType !== "mouse" || dodgeCountRef.current >= CALCULATE_DODGE_LIMIT || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const link = linkRef.current;
+    const hero = link?.closest<HTMLElement>(".hero");
+    if (!link || !hero) return;
+    const linkBounds = link.getBoundingClientRect();
+    const heroBounds = hero.getBoundingClientRect();
+    const availableWidth = Math.max(0, heroBounds.width - linkBounds.width - 32);
+    const availableHeight = Math.max(0, heroBounds.height - linkBounds.height - 32);
+    const positions = [
+      [.04, .08], [.48, .06], [.96, .1],
+      [.08, .62], [.5, .56], [.96, .64],
+    ] as const;
+    const candidates = positions
+      .map(([x, y], index) => ({
+        index,
+        left: heroBounds.left + 16 + availableWidth * x,
+        top: heroBounds.top + 16 + availableHeight * y,
+      }))
+      .filter(({ index }) => !usedPositionsRef.current.includes(index))
+      .sort((a, b) => Math.hypot(b.left - event.clientX, b.top - event.clientY) - Math.hypot(a.left - event.clientX, a.top - event.clientY));
+    const target = candidates[0] ?? positions.map(([x, y], index) => ({
+      index,
+      left: heroBounds.left + 16 + availableWidth * x,
+      top: heroBounds.top + 16 + availableHeight * y,
+    })).sort((a, b) => Math.hypot(b.left - event.clientX, b.top - event.clientY) - Math.hypot(a.left - event.clientX, a.top - event.clientY))[0];
+    if (!target) return;
+    usedPositionsRef.current.push(target.index);
+    const currentX = Number(link.dataset.dodgeX ?? 0);
+    const currentY = Number(link.dataset.dodgeY ?? 0);
+    const nextX = currentX + target.left - linkBounds.left;
+    const nextY = currentY + target.top - linkBounds.top;
+    link.dataset.dodgeX = String(nextX);
+    link.dataset.dodgeY = String(nextY);
+    link.style.setProperty("--dodge-x", `${nextX}px`);
+    link.style.setProperty("--dodge-y", `${nextY}px`);
+    dodgeCountRef.current += 1;
+    setDodgeCount(dodgeCountRef.current);
+  };
+
+  const status = dodgeCount === 1 ? "TOO SLOW · 2 LEFT" : dodgeCount === 2 ? "SO CLOSE · 1 LEFT" : dodgeCount === 3 ? "OK, YOU WIN" : "";
+
+  return <a
+    ref={linkRef}
+    className={`calculate-dodge${dodgeCount === CALCULATE_DODGE_LIMIT ? " is-caught" : ""}`}
+    href="/calculate"
+    aria-label="Calculate yours"
+    onPointerEnter={dodge}
+    onPointerDown={(event) => {
+      lastPointerTypeRef.current = event.pointerType;
+      if (event.pointerType === "mouse" && dodgeCountRef.current < CALCULATE_DODGE_LIMIT) event.preventDefault();
+    }}
+    onClick={(event) => {
+      if (lastPointerTypeRef.current === "mouse" && dodgeCountRef.current < CALCULATE_DODGE_LIMIT) event.preventDefault();
+    }}
+  >
+    <span>CALCULATE<br />YOURS</span>
+    {status ? <small aria-live="polite">{status}</small> : null}
+  </a>;
+}
+
 function MethodologyPage() {
   return <main className="methodology-page">
     <header className="calculate-header">
@@ -659,11 +729,17 @@ export default function App() {
     const y = (event.clientY - bounds.top) / bounds.height - .5;
     letter.style.setProperty("--letter-x", `${x * 12}px`);
     letter.style.setProperty("--letter-y", `${y * 8}px`);
+    letter.style.setProperty("--letter-rx", `${y * -5}deg`);
+    letter.style.setProperty("--letter-ry", `${x * 7}deg`);
+    letter.style.setProperty("--letter-rz", `${x * 1.2}deg`);
   };
 
   const restHeroLetter = (event: React.PointerEvent<HTMLSpanElement>) => {
     event.currentTarget.style.removeProperty("--letter-x");
     event.currentTarget.style.removeProperty("--letter-y");
+    event.currentTarget.style.removeProperty("--letter-rx");
+    event.currentTarget.style.removeProperty("--letter-ry");
+    event.currentTarget.style.removeProperty("--letter-rz");
   };
 
   return (
@@ -703,10 +779,8 @@ export default function App() {
           >H</span>
         </h1>
         <div className="hero-foot">
-          <p>
-            <a href="/methodology">A transparent holding-duration signal for any digital artist.</a>
-            <a href="/calculate">Calculate yours</a>
-          </p>
+          <a className="methodology-link" href="/methodology">A transparent holding-duration signal for any digital artist.</a>
+          <DodgeCalculateLink />
         </div>
       </section>
 

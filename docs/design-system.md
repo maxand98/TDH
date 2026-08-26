@@ -37,10 +37,10 @@ The CSS tokens are:
 
 - The opening viewport is a black cosmic field with an original photographic nebula texture.
 - `myTDH` spans nearly the full viewport width, with each letter kept as a distinct interactive form and a visible optical gap between neighbours.
-- The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome. `Calculate yours` opens the dedicated Raster-profile calculator at `/calculate`.
+- The hero has no masthead, menu bar, or top metadata; the identity and calculation action carry the opening screen without navigation chrome. `Calculate yours` is a large circular signal that dodges a mouse pointer three times, then settles and opens the dedicated Raster-profile calculator at `/calculate`. Keyboard, touch, and reduced-motion interaction never dodge.
 - The main wordmark uses the heaviest display weight, reinforced by a restrained white stroke.
 - Each letter owns one artwork reveal: `m` / Fidenza, `y` / Autoglyph, `T` / Ringers, `D` / Fragments, and `H` / Reas. Hover or keyboard focus reveals that artwork only inside the letterform; the cosmic hero behind it never changes. The paint box must cover every glyph completely, including overshoots and the `y` descender.
-- Pointer movement may shift and tilt only the active letter. The movement stays restrained and returns cleanly to rest when the pointer leaves.
+- Pointer movement shifts and tilts only the active letter across restrained X, Y, and Z rotations. The movement follows the pointer continuously and returns cleanly to rest when the pointer leaves.
 - Non-active letters and supporting copy remain white and unchanged throughout every letter interaction.
 - Cosmic motion combines visible photographic drift with moving blue and copper luminosity. It must never compete with the wordmark or impair reading.
 - All motion stops when the visitor requests reduced motion.

@@ -18,6 +18,8 @@ describe("visual system guardrails", () => {
     expect(stylesheet).toContain("-webkit-mask-size:100% 100%; mask-size:100% 100%;");
     expect(stylesheet).toContain('.hero-letter-y { width:.456em; -webkit-mask-image:url("/glyph-y.svg");');
     expect(stylesheet).toContain('.hero-letter-y:hover,.hero-letter-y:focus-visible { background-image:url("/autoglyph-hover.svg"); background-size:auto 140%; }');
+    expect(stylesheet).toContain("rotateX(var(--letter-rx,0deg)) rotateY(var(--letter-ry,0deg))");
+    expect(appSource).toContain('setProperty("--letter-ry"');
     expect(appSource).not.toContain("hero-art");
   });
 
@@ -35,6 +37,9 @@ describe("visual system guardrails", () => {
     expect(appSource).not.toContain('className="footer-top"');
     expect(appSource).toContain('href="/calculate"');
     expect(appSource).toContain('href="/methodology"');
+    expect(appSource).toContain("CALCULATE_DODGE_LIMIT = 3");
+    expect(appSource).toContain('className={`calculate-dodge');
+    expect(appSource).toContain('event.pointerType !== "mouse"');
     expect(appSource).not.toContain("myTDH · MMXXVI");
   });
 
