@@ -35,6 +35,7 @@ describe("visual system guardrails", () => {
     expect(appSource).not.toContain('className="footer-top"');
     expect(appSource).toContain('href="/calculate"');
     expect(appSource).toContain('href="/methodology"');
+    expect(appSource).not.toContain("myTDH · MMXXVI");
   });
 
   it("uses the live AB5D collection for the idle field", () => {
@@ -42,5 +43,7 @@ describe("visual system guardrails", () => {
     expect(appSource).toContain("const IDLE_DELAY_MS = 5_000");
     expect(appSource).toContain('className="screensaver-canvas"');
     expect(appSource).toContain("context.drawImage");
+    expect(appSource).toContain("SCREENSAVER_TRAIL_SPACING_PX");
+    expect(appSource).not.toContain("changeImage");
   });
 });

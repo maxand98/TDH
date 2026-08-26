@@ -56,8 +56,8 @@ The CSS tokens are:
 
 ## Idle field
 
-- After seven seconds without pointer, keyboard, scroll, or touch input, a full-viewport black idle field appears.
-- Each activation selects one random work from the live AB5D Art Blocks holdings feed. The bundled hero works provide a local fallback if that feed is unavailable.
+- After five seconds without pointer, keyboard, scroll, or touch input, a full-viewport black idle field appears.
+- Each activation selects one random work from the live AB5D Art Blocks holdings feed and keeps that same work throughout the trail, including after edge bounces. Trail stamps use fixed spatial spacing so the field stays visually continuous at different display refresh rates. The bundled hero works provide a local fallback if that feed is unavailable.
 - The artwork occupies a large left-aligned field with deliberate black negative space on wide screens; narrow screens use the full viewport.
 - Any interaction dismisses the idle field immediately and restarts the timer.
 - The idle field does not activate when reduced motion is requested.

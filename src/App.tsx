@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 const IDLE_DELAY_MS = 5_000;
+const SCREENSAVER_TRAIL_SPACING_PX = 1.25;
 const FALLBACK_SCREENSAVER_IMAGES = [
   "/fidenza-hover.webp",
   "/ringers-hover.webp",
@@ -183,7 +184,6 @@ function IdleScreensaver() {
       velocityX: 176 * Math.cos(Math.PI / 4),
       velocityY: 176 * Math.sin(Math.PI / 4),
       lastTime: 0,
-      imageIndex: Math.max(0, images.indexOf(activeImage)),
     };
     let frame = 0;
 
@@ -209,19 +209,12 @@ function IdleScreensaver() {
       updateItemSize();
     };
 
-    const changeImage = () => {
-      if (images.length < 2) return;
-      let nextIndex = state.imageIndex;
-      while (nextIndex === state.imageIndex) nextIndex = Math.floor(Math.random() * images.length);
-      state.imageIndex = nextIndex;
-      const next = images[nextIndex];
-      if (next) image.src = next;
-    };
-
     const drawTrail = () => {
       if (!image.complete || !image.naturalWidth || !state.width || !state.height) return;
-      for (let step = 0; step <= 5; step += 1) {
-        const progress = step / 5;
+      const distance = Math.hypot(state.x - state.lastX, state.y - state.lastY);
+      const steps = Math.max(1, Math.ceil(distance / SCREENSAVER_TRAIL_SPACING_PX));
+      for (let step = 0; step <= steps; step += 1) {
+        const progress = step / steps;
         const x = state.lastX + (state.x - state.lastX) * progress;
         const y = state.lastY + (state.y - state.lastY) * progress;
         context.drawImage(image, x, y, state.width, state.height);
@@ -235,20 +228,16 @@ function IdleScreensaver() {
       state.lastY = state.y;
       state.x += state.velocityX * delta;
       state.y += state.velocityY * delta;
-      let bounced = false;
       const maxX = Math.max(0, container.clientWidth - state.width);
       const maxY = Math.max(0, container.clientHeight - state.height);
       if (state.x <= 0 || state.x >= maxX) {
         state.velocityX *= -1;
         state.x = Math.max(0, Math.min(state.x, maxX));
-        bounced = true;
       }
       if (state.y <= 0 || state.y >= maxY) {
         state.velocityY *= -1;
         state.y = Math.max(0, Math.min(state.y, maxY));
-        bounced = true;
       }
-      if (bounced) changeImage();
       item.style.transform = `translate3d(${state.x}px,${state.y}px,0)`;
       drawTrail();
       frame = requestAnimationFrame(animate);
@@ -615,7 +604,6 @@ function CalculatePage() {
 function SiteFooter() {
   return <footer>
     <div className="footer-license">
-      <span>myTDH · MMXXVI</span>
       <Maxand98Wordmark />
       <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 · NO RIGHTS RESERVED</a>
     </div>
