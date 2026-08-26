@@ -659,7 +659,7 @@ function DodgeCalculateLink() {
     setDodgeCount(dodgeCountRef.current);
   };
 
-  const status = dodgeCount === 1 ? "TOO SLOW · 2 LEFT" : dodgeCount === 2 ? "SO CLOSE · 1 LEFT" : dodgeCount === 3 ? "OK, YOU WIN" : "";
+  const status = dodgeCount === 1 ? "TOO SLOW" : dodgeCount === 2 ? "SO CLOSE" : dodgeCount === 3 ? "OK, YOU WIN" : "";
 
   return <a
     ref={linkRef}
