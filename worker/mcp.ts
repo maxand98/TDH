@@ -19,9 +19,9 @@ function createServer() {
   server.registerTool(
     "list_artist_collectors",
     {
-      description: "List an artist's collector holding-time register from a public Raster profile URL. The score is an artist-specific abTDH equivalent, not oTDH, and never uses price data.",
+      description: "List an artist's collector holding-time register from a Raster artist name, slug, or public profile URL. The score is an artist-specific abTDH equivalent, not oTDH, and never uses price data.",
       inputSchema: z.object({
-        profile: z.string().describe("A Raster artist profile URL, such as https://www.raster.art/artist/casey-reas"),
+        profile: z.string().describe("A Raster artist name, slug, or profile URL, such as Joe Pease"),
         offset: z.number().int().min(0).default(0).describe("Zero-based collector offset"),
         limit: z.number().int().min(1).max(200).default(100).describe("Collector records to return"),
         query: z.string().optional().describe("Optional collector name or wallet filter"),
@@ -57,9 +57,9 @@ function createServer() {
   server.registerTool(
     "start_artist_register",
     {
-      description: "Start an idempotent background job that generates and caches a collector holding-time register for any public Raster artist profile.",
+      description: "Start an idempotent background job that generates and caches a collector holding-time register from a Raster artist name, slug, or public profile URL.",
       inputSchema: z.object({
-        profile: z.string().describe("A Raster artist profile URL, such as https://www.raster.art/artist/joe-pease"),
+        profile: z.string().describe("A Raster artist name, slug, or profile URL, such as Joe Pease"),
       }),
       annotations: {
         readOnlyHint: false,

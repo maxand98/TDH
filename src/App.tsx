@@ -279,6 +279,7 @@ type RasterTdhResponse = {
   covered?: boolean;
   methodology?: string;
   profile?: string;
+  slug?: string;
   message?: string;
   snapshotAt?: string;
   error?: string;
@@ -405,16 +406,30 @@ function csvCell(value: string | number | null) {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
+function markdownCell(value: string | number | null) {
+  return String(value ?? "").replaceAll("|", "\\|").replaceAll("\n", " ");
+}
+
 function CalculatePage() {
-  const [profile, setProfile] = useState("");
+  const initialArtist = new URLSearchParams(window.location.search).get("artist") ?? "";
+  const [profile, setProfile] = useState(initialArtist);
   const [result, setResult] = useState<RasterTdhResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [collectorQuery, setCollectorQuery] = useState("");
   const [collectorPage, setCollectorPage] = useState(0);
   const [celebrationRun, setCelebrationRun] = useState(0);
   const [apiCopied, setApiCopied] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [job, setJob] = useState<RasterRegisterJob | null>(null);
   const calculationRun = useRef(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const autoSubmitted = useRef(false);
+
+  useEffect(() => {
+    if (!initialArtist || autoSubmitted.current) return;
+    autoSubmitted.current = true;
+    formRef.current?.requestSubmit();
+  }, [initialArtist]);
 
   const loadRegister = async (resultUrl: string, run: number, celebrate = true) => {
     const response = await fetch(resultUrl);
@@ -482,6 +497,7 @@ function CalculatePage() {
       const data = await response.json() as RasterRegisterJob;
       if (!response.ok || data.error) throw new Error(data.error || "Unable to start the collector map");
       if (run !== calculationRun.current) return;
+      if (data.slug) window.history.replaceState(null, "", `/calculate?artist=${encodeURIComponent(data.slug)}`);
       setJob(data);
       if (data.state === "complete") {
         if (!data.resultUrl) throw new Error("The cached register did not provide a result URL");
@@ -508,6 +524,8 @@ function CalculatePage() {
   const visibleCollectors = collectors.slice(collectorPage * COLLECTORS_PER_PAGE, (collectorPage + 1) * COLLECTORS_PER_PAGE);
   const exportSlug = result?.artist?.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "artist";
   const apiUrl = `${window.location.origin}/api/raster-collector-tdh?profile=${encodeURIComponent(result?.profile ?? profile)}&limit=5000`;
+  const resultSlug = result?.slug ?? result?.profile?.split("/artist/")[1]?.replace(/\/$/, "") ?? "";
+  const shareUrl = `${window.location.origin}/calculate?artist=${encodeURIComponent(resultSlug)}`;
 
   const exportJson = () => {
     if (result) downloadExport(`${exportSlug}-mytdh.json`, `${JSON.stringify(result, null, 2)}\n`, "application/json");
@@ -520,10 +538,40 @@ function CalculatePage() {
     downloadExport(`${exportSlug}-mytdh.csv`, `${[header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n")}\n`, "text/csv;charset=utf-8");
   };
 
+  const exportMarkdown = () => {
+    if (!result?.collectors || !result.artist || !result.corpus || !result.metric) return;
+    const header = ["Rank", "Collector", "Address", result.metric.label, "Works", "Earliest current hold", "Points / day"];
+    const separator = header.map(() => "---");
+    const rows = result.collectors.map((collector) => [collector.rank, collector.name, collector.address, collector.tdh, collector.works_held, collector.first_acquired_at?.slice(0, 10) ?? "Not recorded", collector.daily_rate]);
+    const table = [header, separator, ...rows].map((row) => `| ${row.map(markdownCell).join(" | ")} |`).join("\n");
+    const content = `# ${result.artist.name} collector TDH\n\n` +
+      `- Snapshot: ${result.snapshotAt?.slice(0, 10) ?? "Not recorded"}\n` +
+      `- Eligible collector addresses: ${result.corpus.eligible_collector_addresses}\n` +
+      `- Indexed artworks: ${result.corpus.artworks}\n` +
+      `- Indexed tokens: ${result.corpus.tokens}\n` +
+      `- Raster profile: ${result.artist.raster_url}\n` +
+      `- Shareable register: ${shareUrl}\n\n${table}\n`;
+    downloadExport(`${exportSlug}-mytdh.md`, content, "text/markdown;charset=utf-8");
+  };
+
   const copyApiUrl = async () => {
     await navigator.clipboard.writeText(apiUrl);
     setApiCopied(true);
     window.setTimeout(() => setApiCopied(false), 1800);
+  };
+
+  const shareRegister = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${result?.artist?.name ?? "Artist"} collector TDH`, url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 1800);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) throw error;
+    }
   };
 
   return <main className="calculate-page">
@@ -533,11 +581,11 @@ function CalculatePage() {
     </header>
     <section className="calculate-intro">
       <div className="calculate-stage">
-        <h1>ENTER YOUR RASTER URL</h1>
-        <form onSubmit={(event) => { void calculate(event); }}>
-          <label htmlFor="raster-profile">RASTER ARTIST PROFILE URL</label>
+        <h1>ENTER AN ARTIST</h1>
+        <form ref={formRef} onSubmit={(event) => { void calculate(event); }}>
+          <label htmlFor="raster-profile">ARTIST NAME OR RASTER PROFILE URL</label>
           <div className="profile-entry">
-            <input id="raster-profile" type="url" inputMode="url" placeholder="https://www.raster.art/artist/casey-reas" value={profile} onChange={(event) => setProfile(event.target.value)} required />
+            <input id="raster-profile" type="text" placeholder="JOE PEASE" value={profile} onChange={(event) => setProfile(event.target.value)} required />
             <button type="submit" disabled={loading}>{loading ? "MAPPING" : "MAP YOUR MOST LOYAL COLLECTORS"}</button>
           </div>
         </form>
@@ -572,6 +620,8 @@ function CalculatePage() {
         <div className="register-actions" aria-label="Export collector register">
           <button type="button" onClick={exportJson}>EXPORT JSON</button>
           <button type="button" onClick={exportCsv}>EXPORT CSV</button>
+          <button type="button" onClick={exportMarkdown}>EXPORT MARKDOWN</button>
+          <button type="button" onClick={() => { void shareRegister(); }}>{shareCopied ? "SHARE URL COPIED" : "SHARE LIST"}</button>
           <button type="button" onClick={() => { void copyApiUrl(); }}>{apiCopied ? "API URL COPIED" : "COPY API URL"}</button>
         </div>
         <div className="collector-controls">

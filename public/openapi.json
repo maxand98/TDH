@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "myTDH API",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "Public artist-specific collector holding-time registers. The primary metric is an adaptation of abTDH, not oTDH."
   },
   "servers": [{ "url": "https://mytdh.xyz" }],
@@ -15,7 +15,7 @@
         "summary": "List an artist's supply-weighted collector holding-time register",
         "description": "Returns every eligible collector record in the requested page. Scores are uninterrupted current-work days weighted inversely by edition size. This endpoint does not return oTDH.",
         "parameters": [
-          { "name": "profile", "in": "query", "required": true, "schema": { "type": "string", "format": "uri" }, "example": "https://www.raster.art/artist/casey-reas" },
+          { "name": "profile", "in": "query", "required": true, "description": "Raster artist name, slug, or profile URL", "schema": { "type": "string" }, "example": "Joe Pease" },
           { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0, "default": 0 } },
           { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 5000, "default": 100 } },
           { "name": "query", "in": "query", "schema": { "type": "string" }, "description": "Optional collector name or wallet filter" }
@@ -41,12 +41,12 @@
         "summary": "Start or reuse a background Raster collector-register job",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "required": ["profile"], "properties": { "profile": { "type": "string", "format": "uri" } } } } }
+          "content": { "application/json": { "schema": { "type": "object", "required": ["profile"], "properties": { "profile": { "type": "string", "description": "Raster artist name, slug, or profile URL", "examples": ["Joe Pease", "https://www.raster.art/artist/joe-pease"] } } } } }
         },
         "responses": {
           "200": { "description": "A cached register is ready" },
           "202": { "description": "The register is queued or running" },
-          "400": { "description": "Invalid Raster profile" }
+          "400": { "description": "Invalid Raster artist name or profile" }
         }
       }
     },

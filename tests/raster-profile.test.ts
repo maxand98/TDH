@@ -7,6 +7,12 @@ describe("Raster artist profiles", () => {
     expect(rasterArtistSlug("raster.art/artist/helena-sarin/")).toBe("helena-sarin");
   });
 
+  it("turns artist names into Raster slugs", () => {
+    expect(rasterArtistSlug("Joe Pease")).toBe("joe-pease");
+    expect(rasterArtistSlug("Sasha Stiles")).toBe("sasha-stiles");
+    expect(rasterArtistSlug("André Osé")).toBe("andre-ose");
+  });
+
   it("rejects non-artist and non-Raster URLs", () => {
     expect(() => rasterArtistSlug("https://www.raster.art/collector/maxand98")).toThrow("Raster artist profile");
     expect(() => rasterArtistSlug("https://example.com/artist/casey-reas")).toThrow("raster.art");

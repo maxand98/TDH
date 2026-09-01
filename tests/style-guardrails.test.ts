@@ -26,6 +26,8 @@ describe("visual system guardrails", () => {
   it("offers durable register exports and a celebratory completion state", () => {
     expect(appSource).toContain("EXPORT JSON");
     expect(appSource).toContain("EXPORT CSV");
+    expect(appSource).toContain("EXPORT MARKDOWN");
+    expect(appSource).toContain("SHARE LIST");
     expect(appSource).toContain("COPY API URL");
     expect(appSource).toContain('className="celebration"');
   });
