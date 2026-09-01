@@ -176,9 +176,14 @@ textarea:focus { outline:2px solid var(--acid); outline-offset:2px; }
 .methodology-copy section { border-top:1px solid rgba(233,231,223,.3); display:grid; gap:clamp(1.5rem,4vw,5rem); grid-template-columns:minmax(15rem,.7fr) minmax(18rem,1fr); padding:clamp(3.5rem,6vw,6rem) 0; }
 .methodology-copy h2 { font-size:clamp(2.75rem,5vw,5.5rem); line-height:.86; margin:0; }
 .methodology-copy p { font-size:clamp(1.2rem,1.75vw,1.55rem); line-height:1.5; margin:0; max-width:37rem; }
-.methodology-copy section>p+ p { grid-column:2; }
+.methodology-detail { display:grid; gap:1.5rem; }
 .methodology-formula { border-bottom:1px solid rgba(233,231,223,.3); border-top:1px solid rgba(233,231,223,.3); font-family:"IBM Plex Mono",monospace; font-weight:500; padding:1.5rem 0; }
 .methodology-copy code { font-family:"IBM Plex Mono",monospace; font-size:.88em; }
+.methodology-example-wrap { min-width:0; }
+.methodology-example { border-collapse:collapse; font-family:"IBM Plex Mono",monospace; width:100%; }
+.methodology-example th,.methodology-example td { border-bottom:1px solid rgba(233,231,223,.3); font-size:var(--text-ui); padding:1rem .75rem; text-align:left; vertical-align:top; }
+.methodology-example th { color:rgba(233,231,223,.66); font-size:var(--text-label); font-weight:500; }
+.methodology-example th:not(:first-child),.methodology-example td:not(:first-child) { padding-left:1.5rem; }
 
 footer { background:#050507; border-top:1px solid rgba(255,255,255,.2); color:#e9e7df; overflow:hidden; padding:2.6rem clamp(1.25rem,4vw,4rem) 3.5rem; }
 footer a { text-decoration:none; }
@@ -196,7 +201,7 @@ footer a { text-decoration:none; }
   .calculate-stage h1 { white-space:normal; }
   .hero { min-height:100svh; } .hero-title { font-size:35.5vw; top:44%; transform:translate(-50.5%,-50%) scaleX(.94); }
   .methodology-link { max-width:17rem; }
-  .method { grid-template-columns:1fr; gap:4rem; } .lab { grid-template-columns:1fr; } .lab-heading { grid-row:auto; } .methodology-copy section { grid-template-columns:1fr; } .methodology-copy section>p+ p { grid-column:1; }
+  .method { grid-template-columns:1fr; gap:4rem; } .lab { grid-template-columns:1fr; } .lab-heading { grid-row:auto; } .methodology-copy section { grid-template-columns:1fr; }
 }
 @media (max-width:520px) {
   .hero { padding-inline:.85rem; } .hero::before { background-position:48% 56%; } .hero-title { font-size:35.5vw; gap:.025em; top:42%; }
@@ -207,6 +212,8 @@ footer a { text-decoration:none; }
   .projects article { grid-template-columns:1.5rem 1fr auto; } .projects small { grid-column:2/-1; grid-row:2; }
   .calculate-intro { background-position:58% center; } .profile-entry { grid-template-columns:1fr; } .profile-entry button { min-height:4rem; min-width:0; white-space:normal; width:100%; } .register-title { display:block; } .register-title strong,.register-title>span { display:block; margin-top:2rem; text-align:left; } .profile-result dl { grid-template-columns:1fr 1fr; } .profile-result dl div:nth-child(3) { border-left:0; border-top:1px solid rgba(255,255,255,.24); } .profile-result dl div:nth-child(4) { border-top:1px solid rgba(255,255,255,.24); }
   .collector-pagination { grid-template-columns:1fr 1fr; } .collector-pagination p { grid-column:1/-1; grid-row:1; }
+  .methodology-example th,.methodology-example td { font-size:var(--text-label); padding:.8rem .25rem; }
+  .methodology-example th:not(:first-child),.methodology-example td:not(:first-child) { padding-left:.5rem; }
   footer { padding-inline:1rem; } .mx-wordmark { font-size:clamp(1.15rem,5vw,1.5rem); width:clamp(7.5rem,34vw,10rem); } .footer-license { gap:.65rem; }
 }
 @media (max-width:720px) { .screensaver-item { width:min(34rem,74vw); } }

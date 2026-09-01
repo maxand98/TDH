@@ -41,6 +41,9 @@ describe("visual system guardrails", () => {
     expect(appSource).not.toContain('className="footer-top"');
     expect(appSource).toContain('href="/calculate"');
     expect(appSource).toContain('href="/methodology"');
+    expect(appSource).toContain("A WORKED EXAMPLE");
+    expect(appSource).toContain("points per day = 100 + 10 + 10 + 1 = 121");
+    expect(appSource).toContain("counts individual tokens or edition copies");
     expect(appSource).toContain("CALCULATE_DODGE_LIMIT = 3");
     expect(appSource).toContain('className={`calculate-dodge');
     expect(appSource).toContain('event.pointerType !== "mouse"');

@@ -135,7 +135,17 @@ export default {
     if (request.method === "GET" && url.pathname === "/api/methodology") {
       return json({
         methodology: RASTER_COLLECTOR_TDH_METHODOLOGY,
-        definition: "An artist-specific adaptation of abTDH: uninterrupted days held per current work, weighted inversely by the indexed edition size, reported for every eligible collector address.",
+        definition: "A collector score built from complete uninterrupted days held for every current token or edition copy, weighted inversely by the artwork's indexed edition size.",
+        formulas: {
+          indexedEditionSize: "max(declared edition size, indexed tokens, 1)",
+          editionWeight: "round2(largest indexed edition / artwork indexed edition)",
+          copyDays: "floor((snapshot time - last acquired time) / 24 hours)",
+          artworkContribution: "round(sum(copy days * quantity) * edition weight)",
+          collectorTdh: "sum(artwork contributions)",
+          pointsPerDay: "round(sum(edition weight * quantity))",
+        },
+        copies: "Every currently held token or edition copy contributes separately.",
+        exclusions: "Raster-listed artist addresses and identified marketplace custody are excluded; ownership addresses are reported independently.",
         priceInputs: false,
       });
     }

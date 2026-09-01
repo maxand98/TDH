@@ -747,30 +747,67 @@ function MethodologyPage() {
     </header>
     <article className="methodology-copy">
       <h1>HOW THE REGISTER<br />IS CALCULATED.</h1>
-      <p className="methodology-lede">The calculator creates an artist-specific equivalent of AB5D’s abTDH: a collector register built from uninterrupted holding time and edition-size weighting. It is not oTDH and it is not an artist score.</p>
+      <p className="methodology-lede">TDH is a points score built from uninterrupted holding time. It rewards current holdings that have been held longer and gives scarcer works more weight. It is not a literal count of days, a price signal or an artist ranking.</p>
+
+      <section>
+        <h2>THE CORPUS</h2>
+        <div className="methodology-detail">
+          <p>The calculation begins with every artwork and token currently indexed under the artist on Raster. An artwork is included only when Raster supplies at least one indexed token.</p>
+          <p>For each artwork, its indexed edition size is the larger of Raster’s declared edition size, the number of indexed tokens, or one. This prevents a partially indexed edition from being treated as artificially scarce.</p>
+          <p className="methodology-formula">indexed edition size = max(declared edition size, indexed tokens, 1)</p>
+        </div>
+      </section>
 
       <section>
         <h2>EACH CURRENT WORK</h2>
-        <p>For every work still held at the snapshot, complete uninterrupted days are measured from Raster’s last-acquired timestamp. A disposal ends that interval; reacquisition begins a new one.</p>
-        <p className="methodology-formula">work contribution = complete days held × edition weight</p>
+        <div className="methodology-detail">
+          <p>For every token or edition copy still held at the snapshot, complete uninterrupted days are measured from Raster’s last-acquired timestamp. Partial days are discarded. A disposal ends that interval; reacquisition begins a new one.</p>
+          <p>Every copy counts. If an address holds two copies of the same edition, both copies contribute holding days and both add the artwork’s weight to that collector’s points per day.</p>
+          <p className="methodology-formula">copy days = floor((snapshot time − last acquired time) ÷ 24 hours)</p>
+        </div>
       </section>
 
       <section>
         <h2>EDITION WEIGHT</h2>
-        <p>The largest indexed artwork in the artist’s declared Raster oeuvre is the reference edition. Each artwork’s weight is the reference size divided by that artwork’s indexed edition size, rounded to two decimal places. This is the same supply-resistance principle used by abTDH, applied within one artist’s oeuvre.</p>
-        <p className="methodology-formula">edition weight = largest indexed edition ÷ artwork indexed edition</p>
+        <div className="methodology-detail">
+          <p>The largest indexed artwork in the artist’s Raster oeuvre becomes the reference edition. Each artwork’s weight is the reference size divided by that artwork’s indexed edition size, rounded to two decimal places.</p>
+          <p>A 1/1 therefore receives the full reference weight. A work from an edition half the reference size receives a weight of two. A work from the reference edition receives a weight of one.</p>
+          <p className="methodology-formula">edition weight = round₂(reference edition size ÷ artwork indexed edition size)</p>
+        </div>
       </section>
 
       <section>
         <h2>THE COLLECTOR SCORE</h2>
-        <p>All weighted work contributions held by one current ownership address are added. The result is that collector’s artist-specific TDH. The register shows every eligible collector address, its current works, earliest current acquisition and points earned per additional day.</p>
-        <p className="methodology-formula">collector artist-TDH = Σ weighted current-work days</p>
+        <div className="methodology-detail">
+          <p>For each artwork, the complete holding days of all copies owned by the address are added and multiplied by that artwork’s weight. That artwork contribution is rounded to the nearest whole point. All artwork contributions are then added to produce the collector’s TDH.</p>
+          <p>The register’s works figure counts individual tokens or edition copies, not only distinct artwork titles. Points per day is the amount the score gains after one more complete day if the holdings do not change.</p>
+          <p className="methodology-formula">artwork contribution = round(Σ copy days × edition weight)<br />collector TDH = Σ artwork contributions<br />points per day = round(Σ edition weight × copies held)</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>A WORKED EXAMPLE</h2>
+        <div className="methodology-detail methodology-example-wrap">
+          <p>Suppose the artist’s largest indexed edition contains 100 works. A collector currently holds four copies:</p>
+          <table className="methodology-example">
+            <thead><tr><th>HOLDING</th><th>DAYS</th><th>WEIGHT</th><th>POINTS</th></tr></thead>
+            <tbody>
+              <tr><td>One 1/1</td><td>30</td><td>100</td><td>3,000</td></tr>
+              <tr><td>Two copies from an edition of 10</td><td>20 each</td><td>10 each</td><td>400</td></tr>
+              <tr><td>One copy from the edition of 100</td><td>50</td><td>1</td><td>50</td></tr>
+            </tbody>
+          </table>
+          <p className="methodology-formula">TDH = 3,000 + 400 + 50 = 3,450<br />points per day = 100 + 10 + 10 + 1 = 121<br />tokens / copies held = 4</p>
+        </div>
       </section>
 
       <section>
         <h2>BOUNDARIES</h2>
-        <p>The corpus is the artist’s verified Raster-indexed oeuvre. Raster-listed artist addresses and identified marketplace custody are excluded. Each ownership address is reported independently; a named Raster collector is shown where available.</p>
-        <p>Price, sales volume, floor price, reputation and artistic judgment have no input. Every result identifies the formula as <code>raster-artist-abtdh/1</code>, names the corpus and publishes the full collector register.</p>
+        <div className="methodology-detail">
+          <p>Raster-listed artist addresses and identified marketplace custody are excluded. Each ownership address is reported independently; wallets are not combined into a person unless Raster itself supplies the displayed collector name.</p>
+          <p>The result is a snapshot. A transfer, disposal, new acquisition, Raster indexing change or later snapshot can change the holdings, score and rank.</p>
+          <p>Price, sales volume, floor price, reputation and artistic judgment have no input. Every result identifies the formula as <code>raster-artist-abtdh/1</code>, names the corpus and publishes the full collector register.</p>
+        </div>
       </section>
     </article>
     <SiteFooter />
