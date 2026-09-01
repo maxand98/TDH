@@ -423,6 +423,7 @@ function CalculatePage() {
   const [job, setJob] = useState<RasterRegisterJob | null>(null);
   const calculationRun = useRef(0);
   const formRef = useRef<HTMLFormElement>(null);
+  const resultRef = useRef<HTMLElement>(null);
   const autoSubmitted = useRef(false);
 
   useEffect(() => {
@@ -436,7 +437,15 @@ function CalculatePage() {
     const data = await response.json() as RasterTdhResponse;
     if (run !== calculationRun.current) return;
     setResult(data);
-    if (celebrate && data.artist && data.collectors) setCelebrationRun((value) => value + 1);
+    if (celebrate && data.artist && data.collectors) {
+      setCelebrationRun((value) => value + 1);
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        resultRef.current?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          block: "start",
+        });
+      }));
+    }
   };
 
   const refreshCachedRegister = async (statusUrl: string, resultUrl: string, run: number) => {
@@ -585,7 +594,7 @@ function CalculatePage() {
         <form ref={formRef} onSubmit={(event) => { void calculate(event); }}>
           <label htmlFor="raster-profile">ARTIST NAME OR RASTER PROFILE URL</label>
           <div className="profile-entry">
-            <input id="raster-profile" type="text" placeholder="JOE PEASE" value={profile} onChange={(event) => setProfile(event.target.value)} required />
+            <input id="raster-profile" type="text" placeholder="e.g. Joe Pease" value={profile} onChange={(event) => setProfile(event.target.value)} required />
             <button type="submit" disabled={loading}>{loading ? "MAPPING" : "MAP YOUR MOST LOYAL COLLECTORS"}</button>
           </div>
         </form>
@@ -599,7 +608,7 @@ function CalculatePage() {
         </div> : null}
       </div>
     </section>
-    {result ? <section className="profile-result" aria-live="polite">
+    {result ? <section ref={resultRef} className="profile-result" aria-live="polite">
       {result.artist && result.corpus && result.metric ? <>
         <div className="register-title">
           <div>

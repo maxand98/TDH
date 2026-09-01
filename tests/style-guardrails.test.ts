@@ -28,6 +28,8 @@ describe("visual system guardrails", () => {
     expect(appSource).toContain("EXPORT CSV");
     expect(appSource).toContain("EXPORT MARKDOWN");
     expect(appSource).toContain("SHARE LIST");
+    expect(appSource).toContain('placeholder="e.g. Joe Pease"');
+    expect(appSource).toContain("resultRef.current?.scrollIntoView");
     expect(appSource).toContain("COPY API URL");
     expect(appSource).toContain('className="celebration"');
   });
