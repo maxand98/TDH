@@ -618,7 +618,7 @@ function CalculatePage() {
           <strong>{number.format(result.corpus.eligible_collector_addresses)}</strong>
           <span>ELIGIBLE COLLECTOR ADDRESSES</span>
         </div>
-        <div className="register-explainer">Every current collector is shown. Each score adds uninterrupted days held across the artist’s Raster-indexed oeuvre, with smaller editions receiving proportionally more weight. This is an artist-specific equivalent of abTDH, not oTDH.</div>
+        <div className="register-explainer">Every current collector is shown. Each score adds uninterrupted days held across the artist’s Raster-indexed oeuvre, with smaller editions receiving proportionally more weight.</div>
         {result.cache?.revalidating ? <p className="register-cache-state" role="status">Cached snapshot shown immediately. Updating it in the background.</p> : null}
         <dl>
           <div><dt>INDEXED ARTWORKS</dt><dd>{number.format(result.corpus.artworks)}</dd></div>
